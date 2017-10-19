@@ -2,6 +2,11 @@
 
 import numpy as np
 
+try:
+    from functools import reduce
+except:
+    pass
+
 class Node:
 
     def __init__(self,tags,dl,dp):
