@@ -83,4 +83,4 @@ class Node:
         T1.data/=np.max(np.abs(T1.data))
         T2.data/=np.max(np.abs(T2.data))
         print(T1.env[0])
-        print(T2.env[1])
+        print(T1.env[1])
