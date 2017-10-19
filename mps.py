@@ -3,8 +3,8 @@
 import numpy as np
 from node import Node
 
-A = Node(["l","r"],[2,2],2)
-B = Node(["l","r"],[2,2],2)
+A = Node(["l","r"],[5,3],2)
+B = Node(["l","r"],[3,5],2)
 
 Node.connect(A,"l",B,"r")
 Node.connect(A,"r",B,"l")

@@ -11,7 +11,7 @@ class Node:
 
     def __init__(self,tags,dl,dp):
         self.data = np.random.random(dl+[dp])
-        self.env = [np.random.random(i) for i in dl]
+        self.env = [np.ones(i) for i in dl]
         self.dl = dl # dimensions of lattice
         self.dll = len(dl) # length of dimensions of lattice
         self.dp = dp # dimensions of physics
@@ -36,11 +36,11 @@ class Node:
         TD1 = T1.data.copy()
         TD2 = T2.data.copy()
         for i,j in enumerate(T1.env):
-            tmp = np.ones(T1.dll,dtype=np.int)
+            tmp = np.ones(T1.dll+1,dtype=np.int)
             tmp[i] = T1.dl[i]
             TD1 *= np.reshape(j*j,tmp)
         for i,j in enumerate(T2.env):
-            tmp = np.ones(T2.dll,dtype=np.int)
+            tmp = np.ones(T2.dll+1,dtype=np.int)
             tmp[i] = T2.dl[i]
             TD2 *= np.reshape(j*j,tmp)
         #2 两个Tensor相乘
@@ -57,6 +57,8 @@ class Node:
         U,S,V = np.linalg.svd(TD)
         T1.env[i1]=np.sqrt(S[:T1.dl[i1]])
         T2.env[i2]=np.sqrt(S[:T2.dl[i2]])
+        T1.env[i1]/=np.max(np.abs(T1.env[i1]))
+        T2.env[i2]/=np.max(np.abs(T2.env[i2]))
         sh1 = sh1 + [T1.dl[i1]]
         sh2 = [T2.dl[i2]] + sh2
         U = np.reshape(U[:,:T1.dl[i1]],sh1)
@@ -69,12 +71,16 @@ class Node:
         for i,j in enumerate(T1.env):
             if i == i1:
                 continue
-            tmp = np.ones(T1.dll,dtype=np.int)
+            tmp = np.ones(T1.dll+1,dtype=np.int)
             tmp[i] = T1.dl[i]
             TD1 /= np.reshape(j*j,tmp)
         for i,j in enumerate(T2.env):
             if i == i2:
                 continue
-            tmp = np.ones(T2.dll,dtype=np.int)
+            tmp = np.ones(T2.dll+1,dtype=np.int)
             tmp[i] = T2.dl[i]
             TD2 /= np.reshape(j*j,tmp)
+        T1.data/=np.max(np.abs(T1.data))
+        T2.data/=np.max(np.abs(T2.data))
+        print T1.env[0]
+        print T2.env[1]
