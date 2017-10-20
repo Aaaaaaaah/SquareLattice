@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-
-try:
-    from functools import reduce
-except:
-    pass
+from functools import reduce
 
 class Node:
 
