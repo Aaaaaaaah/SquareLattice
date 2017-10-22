@@ -48,7 +48,7 @@ class Node:
         #4 SVD
         sh = TD.shape
         sh1 = list(sh[:T1.dll])
-        sh2 = list(sh[T2.dll:])
+        sh2 = list(sh[T1.dll:])
         TD = np.reshape(TD,[reduce(int.__mul__,sh1),reduce(int.__mul__,sh2)])
         U,S,V = np.linalg.svd(TD)
         T1.env[i1]=np.sqrt(S[:T1.dl[i1]])
@@ -60,7 +60,7 @@ class Node:
         U = np.reshape(U[:,:T1.dl[i1]],sh1)
         V = np.reshape(V[:T2.dl[i2],:],sh2)
         o1 = list(range(i1)) + [-1] + list(range(i1,T1.dll))
-        o2 = list(range(1,i2+1)) + [0] + list(range(i2+1,T1.dll+1))
+        o2 = list(range(1,i2+1)) + [0] + list(range(i2+1,T2.dll+1))
         T1.data = np.transpose(U,o1)
         T2.data = np.transpose(V,o2)
         #5 吐Env
