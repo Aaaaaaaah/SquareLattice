@@ -17,7 +17,9 @@ class Node:
         return self.tags.index(tag)
 
     def rename(self,oldTag,newTag):
-        self.tags[self.find_leg_index(oldTag)] = newTag
+        assert len(oldTag) == len(newTag)
+        for i in len(oldTag)
+            self.tags[self.find_leg_index(oldTag[i])] = newTag[i]
 
     @staticmethod
     def connect(T1,tag1,T2,tag2):
