@@ -18,8 +18,20 @@ class Node:
 
     def rename(self,oldTag,newTag):
         assert len(oldTag) == len(newTag)
-        for i in len(oldTag)
+        for i in range(len(oldTag)):
             self.tags[self.find_leg_index(oldTag[i])] = newTag[i]
+
+    def trace(self,tags1,tags2):
+        assert len(tags1) == len(tags2)
+        assert len(tags1 + tags2) == len(set(tags1 + tags2))
+        for i in range(len(tags1)):
+            temp = [self.find_leg_index(tags1[i])]
+            temp += [self.find_leg_index(tags2[i])]
+            i1 = min(temp)
+            i2 = max(temp)
+            self.data = self.data.trace(0,i1,i2)
+            self.dl = self.dl[:i1] + self.dl[i1+1:i2] + self.dl[i2+1:]
+            self.dll -= 2
 
     @staticmethod
     def connect(T1,tag1,T2,tag2):
