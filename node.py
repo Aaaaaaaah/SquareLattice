@@ -5,12 +5,11 @@ from functools import reduce
 
 class Node:
 
-    def __init__(self,tags,dl,dp):
-        self.data = np.random.random(dl+[dp])
+    def __init__(self,tags,dl):
+        self.data = np.random.random(dl)
         self.env = [np.ones(i) for i in dl]
         self.dl = dl # dimensions of lattice
         self.dll = len(dl) # length of dimensions of lattice
-        self.dp = dp # dimensions of physics
         self.tags = tags # dimensions
 
     def find_leg_index(self,tag):
@@ -34,6 +33,21 @@ class Node:
             self.dll -= 2
 
     @staticmethod
+    def contract(T1,tags1,T2,tags2):
+        dl = T1.dl + T2.dl
+        tags = T1.tags + T2.tags
+        order1 = [T1.tags.index(i) for i in tags1]
+        order2 = [T2.tags.index(i) for i in tags2]
+        for i in tags1 + tags2
+            temp = tags.index(i)
+            tags = tags[:temp] + tags[temp+1:]
+            dl = dl[:temp] + dl[temp+1:]
+        T = Node(tags,dl)
+        T.data = np.tensordot(T1.data,T2.data,[order1,order2])
+        return T
+
+    #这个connect是不是没什么用了
+    @staticmethod
     def connect(T1,tag1,T2,tag2):
         i1 = T1.find_leg_index(tag1)
         i2 = T2.find_leg_index(tag2)
@@ -42,6 +56,10 @@ class Node:
 
     @staticmethod
     def update(T1,tag1,T2,tag2,H):
+        ##1 TempT = contract(T1,tag1,T2,Tag2)
+        ##2 TempT = contract(TempT,"phy1",H,"l1")
+        ##3 TempT = contract(TempT,"phy2",H,"r1")
+        ##  SVD
         #1 乘 Env
         i1 = T1.find_leg_index(tag1)
         i2 = T2.find_leg_index(tag2)
