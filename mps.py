@@ -13,7 +13,7 @@ ep = 0.1
 
 H = np.reshape([[0.25,0,0,0],[0,-0.25,0.5,0],[0,0.5,-0.25,0],[0,0,0,0.25]],[2,2,2,2])
 I = np.reshape(np.identity(4),[2,2,2,2])
-expH = Node(["lowerLeft","lowerRight","upperRight","upperLeft"],[2,2,2,2])
+expH = Node(["lowerLeft","lowerRight","upperLeft","upperRight"],[2,2,2,2])
 expH.data = I - 4.*ep*H
 
 for _ in range(10):

@@ -34,29 +34,35 @@ class Node:
 
     @staticmethod
     def contract(T1,tags1,T2,tags2):
-        dl = T1.dl + T2.dl
-        tags = T1.tags + T2.tags
         order1 = [T1.tags.index(i) for i in tags1]
         order2 = [T2.tags.index(i) for i in tags2]
         for i in tags1:
             j = T1.tags.index(i)
             temp = np.ones(T1.dll,dtype=np.int)
-            t1.data *= np.reshape(T1.env[j],temp)
+            temp[j] = T1.dl[j]
+            T1.data *= np.reshape(T1.env[j],temp)
         for i in tags2:
             j = T2.tags.index(i)
             temp = np.ones(T2.dll,dtype=np.int)
-            t2.data *= np.reshape(T2.env[j],temp)
-        for i in tags1 + tags2:
-            temp = tags.index(i)
-            tags = tags[:temp] + tags[temp+1:]
-            dl = dl[:temp] + dl[temp+1:]
+            temp[j] = T2.dl[j]
+            T2.data *= np.reshape(T2.env[j],temp)
+        tags = []
+        dl = []
+        for i in range(T1.dll):
+            if not (i in order1):
+                tags.append(T1.tags[i])
+                dl.append(T1.dl[i])
+        for i in range(T2.dll):
+            if not (i in order2):
+                tags.append(T2.tags[i])
+                dl.append(T2.dl[i])
         T = Node(tags,dl)
         T.data = np.tensordot(T1.data,T2.data,[order1,order2])
         for x in T1.tags:
             if x in tags1:
                 continue
             if (not (x in tags2)) & (x in T2.tags):
-                T2.tags[T2.tags.index(x)] += "'"
+                T.tags[T.tags.index(x,T.tags.index(x)+1)] += "'"
         return T
 
     #原有的connect由于env初始化为1没什么用了
@@ -73,9 +79,9 @@ class Node:
         #0 初始缩并
         i1 = T1.find_leg_index(tag1)
         i2 = T2.find_leg_index(tag2)
-        TempT = contract(T1,[tag1],T2,[Tag2])
-        TempT = contract(TempT,"phy",H,"lowerLeft")
-        TempT = contract(TempT,"phy'",H,"lowerRight")
+        TempT = Node.contract(T1,[tag1],T2,[tag2])
+        TempT = Node.contract(TempT,["phy","phy'"],H,["lowerLeft","lowerRight"])
+        print(TempT.tags,TempT.dl)
         #1 乘 Env
         TD = TempT.data.copy()
         for i,j in enumerate(TempT.env):
@@ -83,7 +89,8 @@ class Node:
             tmp[i] = TempT.dl[i]
             TD *= np.reshape(j*j,tmp)
         #2 SVD
-        temp = list(range(T1.dll)) + [TempT.dll-2] + list(range(T1.dll,TempT.dll-2)) + [TempT.dll-1]
+        temp = list(range(T1.dll-2)) + [TempT.dll-2] + list(range(T1.dll-2,TempT.dll-2)) + [TempT.dll-1]
+        print(temp)
         TD = np.transpose(TD,temp)
         sh = TD.shape
         sh1 = list(sh[:T1.dll-1])
