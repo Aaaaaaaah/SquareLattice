@@ -38,15 +38,20 @@ class Node:
         tags = T1.tags + T2.tags
         order1 = [T1.tags.index(i) for i in tags1]
         order2 = [T2.tags.index(i) for i in tags2]
-        for i in tags1 + tags2
+        for i in tags1 + tags2:
             temp = tags.index(i)
             tags = tags[:temp] + tags[temp+1:]
             dl = dl[:temp] + dl[temp+1:]
         T = Node(tags,dl)
         T.data = np.tensordot(T1.data,T2.data,[order1,order2])
+        for x in T1.tags:
+            if x in tags1:
+                continue
+            if (not (x in tags2)) & (x in T2.tags):
+                T2.tags[T2.tags.index(x)] += "'"
         return T
 
-    #这个connect是不是没什么用了
+    #原有的connect由于env初始化为1没什么用了
     @staticmethod
     def connect(T1,tag1,T2,tag2):
         i1 = T1.find_leg_index(tag1)
@@ -57,8 +62,8 @@ class Node:
     @staticmethod
     def update(T1,tag1,T2,tag2,H):
         ##1 TempT = contract(T1,tag1,T2,Tag2)
-        ##2 TempT = contract(TempT,"phy1",H,"l1")
-        ##3 TempT = contract(TempT,"phy2",H,"r1")
+        ##2 TempT = contract(TempT,"phy1",H,"lowerLeft")
+        ##3 TempT = contract(TempT,"phy2",H,"lowerRight")
         ##  SVD
         #1 乘 Env
         i1 = T1.find_leg_index(tag1)
