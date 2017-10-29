@@ -81,7 +81,6 @@ class Node:
         i2 = T2.find_leg_index(tag2)
         TempT = Node.contract(T1,[tag1],T2,[tag2])
         TempT = Node.contract(TempT,["phy","phy'"],H,["lowerLeft","lowerRight"])
-        print(TempT.tags,TempT.dl)
         #1 乘 Env
         TD = TempT.data.copy()
         for i,j in enumerate(TempT.env):
@@ -90,7 +89,6 @@ class Node:
             TD *= np.reshape(j*j,tmp)
         #2 SVD
         temp = list(range(T1.dll-2)) + [TempT.dll-2] + list(range(T1.dll-2,TempT.dll-2)) + [TempT.dll-1]
-        print(temp)
         TD = np.transpose(TD,temp)
         sh = TD.shape
         sh1 = list(sh[:T1.dll-1])

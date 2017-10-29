@@ -3,8 +3,9 @@
 import numpy as np
 from node import Node
 
-A = Node(["l","r","phy"],[5,3,2])
-B = Node(["l","r","phy"],[3,5,2])
+D = 4
+A = Node(["l","r","phy"],[D,D,2])
+B = Node(["l","r","phy"],[D,D,2])
 
 #Node.connect(A,"l",B,"r")
 #Node.connect(A,"r",B,"l")
@@ -16,6 +17,32 @@ I = np.reshape(np.identity(4),[2,2,2,2])
 expH = Node(["lowerLeft","lowerRight","upperLeft","upperRight"],[2,2,2,2])
 expH.data = I - 4.*ep*H
 
-for _ in range(10):
+for _ in range(1000):
     Node.update(A,"l",B,"r",expH)
     Node.update(A,"r",B,"l",expH)
+
+Left = Node(["u","d"],[D,D])
+Right = Node(["u","d"],[D,D])
+for _ in range(1000)
+    Left = Node.contract(Left,["u"],A,["l"])
+    Left = Node.contract(Left,["phy","d"],A,["phy","l"])
+    Left.rename(["r","r'"],["u","d"])
+    Left = Node.contract(Left,["u"],B,["l"])
+    Left = Node.contract(Left,["phy","d"],B,["phy","l"])
+    Right = Node.contract(Right,["u"],B,["r"])
+    Right = Node.contract(Right,["phy","d"],B,["phy","r"])
+    Right.rename(["l","l'"],["u","d"])
+    Right = Node.contract(Left,["u"],A,["r"])
+    Right = Node.contract(Left,["phy","d"],A,["phy","r"])
+
+temp = Node.contract(A,["r"],B,["l"])
+Norm = Node.contract(temp,["u"],Left,["l"])
+Norm = Node.contract(Norm,["d","phy","phy'"],temp,["l","phy","phy'"])
+Norm = Node.contract(Norm,["r","r'"],Right,["u","d"])
+
+Energy = Node.contract(temp,["u"],Left,["l"])
+temp = Node.contract(temp,["phy","phy'"],H,["lowerLeft","lowerRight"])
+Energy = Node.contract(Energy,["d","phy","phy'"],temp,["l","upperLeft","upperRight"])
+Energy = Node.contract(Energy,["r","r'"],Right,["u","d"])
+
+print(Energy.data / Norm.data)
