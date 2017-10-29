@@ -23,7 +23,7 @@ for _ in range(1000):
 
 Left = Node(["u","d"],[D,D])
 Right = Node(["u","d"],[D,D])
-for _ in range(1000)
+for _ in range(1000):
     Left = Node.contract(Left,["u"],A,["l"])
     Left = Node.contract(Left,["phy","d"],A,["phy","l"])
     Left.rename(["r","r'"],["u","d"])
