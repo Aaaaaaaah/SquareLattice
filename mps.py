@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import numpy as np
 from node import Node
 
@@ -29,19 +27,21 @@ for _ in range(1000):
     Left.rename(["r","r'"],["u","d"])
     Left = Node.contract(Left,["u"],B,["l"])
     Left = Node.contract(Left,["phy","d"],B,["phy","l"])
+    Left.rename(["r","r'"],["u","d"])
     Right = Node.contract(Right,["u"],B,["r"])
     Right = Node.contract(Right,["phy","d"],B,["phy","r"])
     Right.rename(["l","l'"],["u","d"])
-    Right = Node.contract(Left,["u"],A,["r"])
-    Right = Node.contract(Left,["phy","d"],A,["phy","r"])
+    Right = Node.contract(Right,["u"],A,["r"])
+    Right = Node.contract(Right,["phy","d"],A,["phy","r"])
+    Right.rename(["l","l'"],["u","d"])
 
 temp = Node.contract(A,["r"],B,["l"])
-Norm = Node.contract(temp,["u"],Left,["l"])
+Norm = Node.contract(Left,["u"],temp,["l"])
 Norm = Node.contract(Norm,["d","phy","phy'"],temp,["l","phy","phy'"])
 Norm = Node.contract(Norm,["r","r'"],Right,["u","d"])
 
-Energy = Node.contract(temp,["u"],Left,["l"])
-temp = Node.contract(temp,["phy","phy'"],H,["lowerLeft","lowerRight"])
+Energy = Node.contract(Left,["u"],temp,["l"])
+temp = Node.contract(temp,["phy","phy'"],expH,["lowerLeft","lowerRight"])
 Energy = Node.contract(Energy,["d","phy","phy'"],temp,["l","upperLeft","upperRight"])
 Energy = Node.contract(Energy,["r","r'"],Right,["u","d"])
 
