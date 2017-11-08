@@ -33,35 +33,33 @@ class Node:
         self.data *= np.reshape(en,tmp)
 
     def absorbAllEnv(self,n=1):
-        for i in range(self.dll)
+        for i in range(self.dll):
             self.absorbEnv(i,n)
 
     @staticmethod
     def contract(T1,tags1,T2,tags2):
         order1 = [T1.tags.index(i) for i in tags1]
         order2 = [T2.tags.index(i) for i in tags2]
-        for i in tags1:
-            j = T1.tags.index(i)
-            temp = np.ones(T1.dll,dtype=np.int)
-            temp[j] = T1.dl[j]
-            T1.data *= np.reshape(T1.env[j],temp)
-        for i in tags2:
-            j = T2.tags.index(i)
-            temp = np.ones(T2.dll,dtype=np.int)
-            temp[j] = T2.dl[j]
-            T2.data *= np.reshape(T2.env[j],temp)
+        for i in order1:
+            T1.absorbEnv(i)
+        for i in order2:
+            T2.absorbEnv(i)
         tags = []
         dl = []
+        env = []
         for i in range(T1.dll):
             if not (i in order1):
                 tags.append(T1.tags[i])
                 dl.append(T1.dl[i])
+                env.append(T1.env[i])
         for i in range(T2.dll):
             if not (i in order2):
                 tags.append(T2.tags[i])
                 dl.append(T2.dl[i])
+                env.append(T2.env[i])
         T = Node(tags,dl)
         T.data = np.tensordot(T1.data,T2.data,[order1,order2])
+        T.env = env;
         for x in T1.tags:
             if x in tags1:
                 continue
