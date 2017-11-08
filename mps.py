@@ -5,8 +5,8 @@ from node import Node
 
 D = 8
 
-A = Node(["l","r"],[D,D],2)
-B = Node(["l","r"],[D,D],2)
+A = Node(["l","r","p"],[D,D,2])
+B = Node(["l","r","p"],[D,D,2])
 
 Node.connect(A,"l",B,"r")
 Node.connect(A,"r",B,"l")
@@ -18,9 +18,9 @@ I = np.reshape(np.identity(4),[2,2,2,2])
 expH = I - 4.*ep*H
 
 for _ in range(100):
-    Node.update(A,"r",B,"l",expH)
-    Node.update(B,"r",A,"l",expH)
-    Node.update(B,"r",A,"l",expH)
-    Node.update(A,"r",B,"l",expH)
+    Node.update(A,B,"r","l","p","p",expH)
+    Node.update(A,B,"l","r","p","p",expH)
+    Node.update(A,B,"l","r","p","p",expH)
+    Node.update(A,B,"r","l","p","p",expH)
 
-print A.env
+print(A.envs[:2])

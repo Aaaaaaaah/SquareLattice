@@ -1,102 +1,144 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from functools import reduce
 
 class Node:
 
-    def __init__(self,tags,dl,dp,data=None,env=None):
+    def __init__(self,tags,dims,data=None,envs=None):
+        assert len(tags) == len(dims)
+        assert len(set(tags)) == len(tags)
         if data is not None:
-            self.data = np.array(data,dtype=np.float32)
+            self.data = np.reshape(np.array(data,dtype=np.float64),dims)
             self.data /= np.max(np.abs(self.data))
-            assert list(self.data.shape) == dl+[dp]
         else:
-            self.data = np.random.random(dl+[dp])
-        if env is not None:
-            self.env = []
-            for i,j in zip(env,dl):
-                tmp = np.array(i,dtype=np.float32)
-                tmp = tmp/np.max(np.abs(tmp))
-                assert tmp.shape == (j,)
-                self.env.append(tmp)
+            self.data = np.random.random(dims)
+        if envs is not None:
+            self.envs = []
+            for i,j in zip(dims,envs):
+                if j is None:
+                    self.envs.append(np.ones(i))
+                else:
+                    tmp = np.array(j,dtype=np.float64)
+                    tmp /= np.max(np.abs(tmp))
+                    assert tmp.shape == (i,)
+                    self.envs.append(tmp)
         else:
-            self.env = [np.ones(i) for i in dl]
-        self.dl = dl # dimensions of lattice
-        self.dll = len(dl) # length of dimensions of lattice
-        self.dp = dp # dimensions of physics
-        self.tags = tags # dimensions
+            self.envs = [np.ones(i) for i in dims]
+        self.dims = list(dims)
+        self.tags = list(tags)
 
+    def replace(self,other):
+        self.data = other.data
+        self.envs = other.envs
+        self.dims = other.dims
+        self.tags = other.tags
+
+    @staticmethod
     def copy(self):
-        return Node(self.tags,self.dl,self.dp,data=self.data,env=self.env)
-
-    def find_leg_index(self,tag):
-        return self.tags.index(tag)
-
+        return Node(self.tags,self.dims,self.data,self.envs)
     @staticmethod
     def connect(T1,tag1,T2,tag2):
-        i1 = T1.find_leg_index(tag1)
-        i2 = T2.find_leg_index(tag2)
-        assert T1.dl[i1] == T2.dl[i2]
-        T1.env[i1] = T2.env[i2]
+        T1.envs[T1.tags.index(tag1)] = T2.envs[T2.tags.index(tag2)]
+
+    def rename_leg(self,tag_dict):
+        for i,j in tag_dict.items():
+            self.tags[self.tags.index(i)] = j
 
     @staticmethod
-    def update(T1,tag1,T2,tag2,H):
-        #1 乘 Env
-        i1 = T1.find_leg_index(tag1)
-        i2 = T2.find_leg_index(tag2)
-        assert T1.dl[i1] == T2.dl[i2]
-        TD1 = T1.data.copy()
-        TD2 = T2.data.copy()
-        for i,j in enumerate(T1.env):
-            tmp = np.ones(T1.dll+1,dtype=np.int)
-            tmp[i] = T1.dl[i]
-            if i==i1:
-                TD1 *= np.reshape(j,tmp)
-            else:
-                TD1 *= np.reshape(j*j,tmp)
-        for i,j in enumerate(T2.env):
-            tmp = np.ones(T2.dll+1,dtype=np.int)
-            tmp[i] = T2.dl[i]
-            if i==i2:
-                TD2 *= np.reshape(j,tmp)
-            else:
-                TD2 *= np.reshape(j*j,tmp)
-        #2 两个Tensor相乘
-        TD = np.tensordot(TD1,TD2,[[i1],[i2]])
-        #3 乘上Hamiltonian
-        TD = np.tensordot(TD,H,[[T1.dll-1,-1],[0,1]])
-        tmp = list(range(T1.dll-1))+[T1.dll+T2.dll-2]+list(range(T1.dll-1,T1.dll+T2.dll-2))+[T1.dll+T2.dll-1]
-        TD = np.transpose(TD,tmp)
-        #4 SVD
-        sh = TD.shape
-        sh1 = list(sh[:T1.dll])
-        sh2 = list(sh[T2.dll:])
-        TD = np.reshape(TD,[reduce(int.__mul__,sh1),reduce(int.__mul__,sh2)])
-        U,S,V = np.linalg.svd(TD)
-        T1.env[i1]=np.sqrt(S[:T1.dl[i1]])
-        T2.env[i2]=np.sqrt(S[:T2.dl[i2]])
-        T1.env[i1]/=np.max(np.abs(T1.env[i1]))
-        T2.env[i2]/=np.max(np.abs(T2.env[i2]))
-        sh1 = sh1 + [T1.dl[i1]]
-        sh2 = [T2.dl[i2]] + sh2
-        U = np.reshape(U[:,:T1.dl[i1]],sh1)
-        V = np.reshape(V[:T2.dl[i2],:],sh2)
-        o1 = list(range(i1)) + [-1] + list(range(i1,T1.dll))
-        o2 = list(range(1,i2+1)) + [0] + list(range(i2+1,T1.dll+1))
-        T1.data = np.transpose(U,o1)
-        T2.data = np.transpose(V,o2)
-        #5 吐Env
-        for i,j in enumerate(T1.env):
-            if i is i1:
-                continue
-            tmp = np.ones(T1.dll+1,dtype=np.int)
-            tmp[i] = T1.dl[i]
-            T1.data /= np.reshape(j*j,tmp)
-        for i,j in enumerate(T2.env):
-            if i is i2:
-                continue
-            tmp = np.ones(T2.dll+1,dtype=np.int)
-            tmp[i] = T2.dl[i]
-            T2.data /= np.reshape(j*j,tmp)
-        T1.data/=np.max(np.abs(T1.data))
-        T2.data/=np.max(np.abs(T2.data))
+    def absorb_envs(self,pow,legs=None):
+        ans = self.data.copy()
+        if legs == None:
+            legs = range(len(self.dims))
+        for i in legs:
+            tmp = np.ones(len(self.dims),dtype=int)
+            tmp[i] = self.dims[i]
+            ans *= np.reshape(np.power(self.envs[i],pow),tmp)
+        return ans
+
+    @staticmethod
+    def transpose(self,tags):
+        data = np.transpose(self.data,[self.tags.index(i) for i in tags])
+        dims = [self.dims[self.tags.index(i)] for i in tags]
+        envs = [self.envs[self.tags.index(i)] for i in tags]
+        return Node(tags,dims,data,envs)
+
+    def transpose(self,tags):
+        self.data = np.transpose(self.data,[self.tags.index(i) for i in tags])
+        tmp = self.dims
+        self.dims = [tmp[self.tags.index(i)] for i in tags]
+        tmp = self.envs
+        self.envs = [tmp[self.tags.index(i)] for i in tags]
+        self.tags = tags
+
+    def __repr__(self):
+        return "Node with dims: %s"%str(zip(self.tags,self.dims))
+
+    @staticmethod
+    def contract(T1,tags1,T2,tags2,tags_dict1=dict(),tags_dict2=dict()):
+        # order:the indexs of legs waiting for contracting
+        order1 = [T1.tags.index(i) for i in tags1]
+        order2 = [T2.tags.index(i) for i in tags2]
+        # absorb envsironment
+        TD1 = Node.absorb_envs(T1,1,order1)
+        TD2 = Node.absorb_envs(T2,1,order2)
+        # generate the contribute of the answer
+        for i in tags_dict1:
+            assert i in T1.tags and i is not tags1
+        for i in tags_dict2:
+            assert i in T2.tags and i is not tags2
+        tags = [j if j not in tags_dict1 else tags_dict1[j] for i,j in enumerate(T1.tags) if i not in order1] +\
+               [j if j not in tags_dict2 else tags_dict2[j] for i,j in enumerate(T2.tags) if i not in order2]
+        dims = [j for i,j in enumerate(T1.dims) if i not in order1] + [j for i,j in enumerate(T2.dims) if i not in order2]
+        envs = [j for i,j in enumerate(T1.envs) if i not in order1] + [j for i,j in enumerate(T2.envs) if i not in order2]
+        #initiate the answer
+        T = Node(tags,dims,np.tensordot(TD1,TD2,[order1,order2]),envs)
+        return T
+
+    @staticmethod
+    def svd(self,num,tag1,tag2,cut):
+        dims1 = self.dims[:num]
+        dims2 = self.dims[num:]
+        data1, env, data2 = np.linalg.svd(
+            np.reshape(
+                Node.absorb_envs(self,2),
+                [np.prod(dims1),np.prod(dims2)])
+        )
+        env = np.sqrt(env[:cut])
+        data1 = data1[:,:cut]
+        data2 = data2[:cut,:]
+        tags1 = self.tags[:num] + [tag1]
+        tags2 = [tag2] + self.tags[num:]
+        dims1 = dims1 + [cut]
+        dims2 = [cut] + dims2
+        envs1 = self.envs[:num] + [env]
+        envs2 = [env] + self.envs[num:]
+        T1,T2 = Node(tags1,dims1,data1,envs1),Node(tags2,dims2,data2,envs2)
+        T1.data = Node.absorb_envs(T1,-2,range(len(dims1)-1))
+        T2.data = Node.absorb_envs(T2,-2,range(1,len(dims2)))
+        return T1,T2
+
+    @staticmethod
+    def update(T1,T2,tag1,tag2,phy1,phy2,H,cut=None):
+        # 准备
+        l1 = T1.dims[T1.tags.index(phy1)]
+        l2 = T2.dims[T2.tags.index(phy2)]
+        if cut is None:
+            cut = T1.dims[T1.tags.index(tag1)]
+
+        # 缩并
+        TD = Node.contract(T1,[tag1],T2,[tag2],
+                           {i:"__1.%s"%i for i in T1.tags if i is not tag1},
+                           {i:"__2.%s"%i for i in T2.tags if i is not tag2})
+        tmp = TD.tags
+        HH = Node(["__1","__2","__1.%s"%phy1,"__2.%s"%phy2],[l1,l2,l1,l2],H)
+        TD = Node.contract(TD,["__1.%s"%phy1,"__2.%s"%phy2],HH,["__1","__2"])
+        TD.transpose(tmp)
+        # SVD
+        TD1,TD2 = Node.svd(TD,len(T1.tags)-1,tag1,tag2,cut)
+        TD1.rename_leg({"__1.%s"%i:i for i in T1.tags if i is not tag1})
+        TD2.rename_leg({"__2.%s"%i:i for i in T2.tags if i is not tag2})
+        TD1.transpose(T1.tags)
+        TD2.transpose(T2.tags)
+        T1.replace(TD1)
+        T2.replace(TD2)
+

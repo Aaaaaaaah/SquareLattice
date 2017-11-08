@@ -1,0 +1,6 @@
+max(abs(x))
+matmul(x,y) -> tensordot
+svd(x)
+random()
+transpose(x,t) -> transpose
+
