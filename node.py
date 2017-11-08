@@ -38,12 +38,16 @@ class Node:
 
     @staticmethod
     def contract(T1,tags1,T2,tags2):
+        ##contract 2 tensors
+        #order:the indexs of legs waiting for contracting
         order1 = [T1.tags.index(i) for i in tags1]
         order2 = [T2.tags.index(i) for i in tags2]
+        #absorb environment
         for i in order1:
             T1.absorbEnv(i)
         for i in order2:
             T2.absorbEnv(i)
+        #generate the contribute of the answer
         tags = []
         dl = []
         env = []
@@ -57,9 +61,11 @@ class Node:
                 tags.append(T2.tags[i])
                 dl.append(T2.dl[i])
                 env.append(T2.env[i])
+        #initiate the answer
         T = Node(tags,dl)
         T.data = np.tensordot(T1.data,T2.data,[order1,order2])
         T.env = env;
+        #pollish the repeated tags
         for x in T1.tags:
             if x in tags1:
                 continue
@@ -76,11 +82,9 @@ class Node:
         TempT = Node.contract(T1,[tag1],T2,[tag2])
         TempT = Node.contract(TempT,["phy","phy'"],H,["lowerLeft","lowerRight"])
         #1 乘 Env
-        TD = TempT.data.copy()
-        for i,j in enumerate(TempT.env):
-            tmp = np.ones(TempT.dll,dtype=np.int)
-            tmp[i] = TempT.dl[i]
-            TD *= np.reshape(j*j,tmp)
+        TD = TempT.copy()
+        TD.absorbAllEnv(2)
+        TD = TD.data
         #2 SVD
         temp = list(range(T1.dll-2)) + [TempT.dll-2] + list(range(T1.dll-2,TempT.dll-2)) + [TempT.dll-1]
         TD = np.transpose(TD,temp)
@@ -102,17 +106,9 @@ class Node:
         T1.data = np.transpose(U,o1)
         T2.data = np.transpose(V,o2)
         #3 吐Env
-        for i,j in enumerate(T1.env):
-            if i == i1:
-                continue
-            tmp = np.ones(T1.dll,dtype=np.int)
-            tmp[i] = T1.dl[i]
-            T1.data /= np.reshape(j*j,tmp)
-        for i,j in enumerate(T2.env):
-            if i == i2:
-                continue
-            tmp = np.ones(T2.dll,dtype=np.int)
-            tmp[i] = T2.dl[i]
-            T2.data /= np.reshape(j*j,tmp)
+        T1.absorbAllEnv(-2)
+        T1.absorbEnv(i1,2)
+        T2.absorbAllEnv(-2)
+        T2.absorbEnv(i2,2)
         T1.data/=np.max(np.abs(T1.data))
         T2.data/=np.max(np.abs(T2.data))
