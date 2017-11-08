@@ -6,9 +6,6 @@ from functools import reduce
 class Node:
 
     def __init__(self,tags,dims,data=None,envs=None):
-        """
-        初始化一个Node,参数分别为tags,dims,data,envs
-        """
         assert len(tags) == len(dims)
         if data is not None:
             self.data = np.reshape(np.array(data,dtype=np.float32),dims)
@@ -38,23 +35,14 @@ class Node:
 
     @staticmethod
     def copy(self):
-        """
-        完整地复制一个Node
-        """
         return Node(self.tags,self.dims,self.data,self.envs)
 
     def rename_leg(self,tag_dict):
-        """
-        重命名tags,参数为dict
-        """
         for i,j in tag_dict.items():
             self.tags[self.find_leg_index(i)] = j
 
     @staticmethod
     def absorb_envs(self,pow,legs=None):
-        """
-        返回的是一个array而不是Node
-        """
         if legs == None:
             legs = range(len(self.dims))
         for i in legs:
@@ -83,10 +71,6 @@ class Node:
 
     @staticmethod
     def contract(T1,tags1,T2,tags2):
-        """
-        缩并两个张量
-        """
-        # contract 2 tensors
         # order:the indexs of legs waiting for contracting
         order1 = [T1.tags.index(i) for i in tags1]
         order2 = [T2.tags.index(i) for i in tags2]
@@ -104,7 +88,6 @@ class Node:
 
     @staticmethod
     def svd(self,num,tag1,tag2,cut):
-        """SVD"""
         dims1 = self.dims[:num]
         dims2 = self.dims[num:]
         data1, env, data2 = np.linalg.svd(
@@ -126,7 +109,11 @@ class Node:
     @staticmethod
     def update(T1,tag1,T2,tag2,phy_leg,H,cut=None):
         # 准备
-        cut = 2
+        l1 = T1.dims[T1.tags.index(phy_leg[0])]
+        l2 = T2.dims[T2.tags.index(phy_leg[1])]
+        assert T1.dims[T1.tags.index(tag1)] = T2.dims[T2.tags.index(tag2)]
+        if cut is None:
+            cut = T1.dims[T1.tags.index(tag1)]
 
         # 缩并
         TD = Node.contract(T1,[tag1],T2,[tag2])
@@ -136,5 +123,7 @@ class Node:
         TD.transpose(tmp)
         # SVD
         TD1,TD2 = Node.svd(TD,len(T1.tags)-1,tag1,tag2,cut)
+        TD1.transpose(T1.tags)
+        TD2.transpose(T2.tags)
         T1.replace(TD1)
         T2.replace(TD2)
