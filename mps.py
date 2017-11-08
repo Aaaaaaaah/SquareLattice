@@ -2,8 +2,14 @@ import numpy as np
 from node import Node
 
 D = 8
+<<<<<<< HEAD
 A = Node(["l","r","phy"],[D,D,2])
 B = Node(["l","r","phy"],[D,D,2])
+=======
+
+A = Node(["l","r"],[D,D],2)
+B = Node(["l","r"],[D,D],2)
+>>>>>>> HaoZhang
 
 #Node.connect(A,"l",B,"r")
 #Node.connect(A,"r",B,"l")
@@ -16,6 +22,7 @@ expH = Node(["lowerLeft","lowerRight","upperLeft","upperRight"],[2,2,2,2])
 expH.data = I - 4.*ep*H
 
 for _ in range(100):
+<<<<<<< HEAD
     Node.update(A,"l",B,"r",expH)
     Node.update(A,"r",B,"l",expH)
 print("A.env",A.env)
@@ -50,3 +57,11 @@ Energy = Node.contract(Energy,["d","phy","phy'"],temp,["l","upperLeft","upperRig
 Energy = Node.contract(Energy,["r","r'"],Right,["u","d"])
 
 print(Energy.data / Norm.data)
+=======
+    Node.update(A,"r",B,"l",expH)
+    Node.update(B,"r",A,"l",expH)
+    Node.update(B,"r",A,"l",expH)
+    Node.update(A,"r",B,"l",expH)
+
+print A.env
+>>>>>>> HaoZhang

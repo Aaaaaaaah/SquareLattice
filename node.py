@@ -5,66 +5,59 @@ from functools import reduce
 
 class Node:
 
-    def __init__(self,tags,dl):
-        self.data = np.random.random(dl)
-        self.env = [np.ones(i) for i in dl]
-        self.dl = dl # dimensions of lattice
-        self.dll = len(dl) # length of dimensions of lattice
+    def __init__(self,tags,dims,data=None,env=None):
+        if data is not None:
+            self.data = np.array(data,dtype=np.float32)
+            self.data /= np.max(np.abs(self.data))
+            assert self.data.shape == dims
+        else:
+            self.data = np.random.random(dims)
+        if env is not None:
+            self.env = []
+            for i,j in zip(env,dims):
+                tmp = np.array(i,dtype=np.float32)
+                tmp = tmp/np.max(np.abs(tmp))
+                assert tmp.shape == j
+                self.env.push(tmp)
+        else:
+            self.env = [np.ones(i) for i in dims]
+        self.dims = dims # dimensions of lattice
+        self.diml = len(dims) # length of dimensions of lattice
         self.tags = tags # dimensions
+
+    def copy(self):
+        return Node(self.tags,self.dims,data=self.data,env=self.env)
 
     def find_leg_index(self,tag):
         return self.tags.index(tag)
 
-    def rename(self,oldTag,newTag):
-        assert len(oldTag) == len(newTag)
-        for i in range(len(oldTag)):
-            self.tags[self.find_leg_index(oldTag[i])] = newTag[i]
+    def rename(self,tag_dict):
+        for i,j in tag_dict.items():
+            self.tags[self.find_leg_index(i)] = j
 
-    def copy(self):
-        T = Node(self.tags, self.dl)
-        T.data = self.data
-        T.env = self.env
-        return T
-
-    def absorbEnv(self,i0,n=1):
-        tmp = np.ones(self.dll,dtype=int)
-        tmp[i0] = self.dl[i0]
-        en = np.power(self.env[i0], n)
-        self.data *= np.reshape(en,tmp)
-
-    def absorbAllEnv(self,n=1):
-        for i in range(self.dll):
-            self.absorbEnv(i,n)
+    def absorb_env(self,pow):
+        ans = self.data.copy()
+        for i,j in enumerate(self.env):
+            tmp = np.ones(self.diml,dtype=int)
+            tmp[i] = self.dims[i]
+            ans *= np.reshape(np.power(self.env[i],pow[i]),tmp)
+        return ans
 
     @staticmethod
     def contract(T1,tags1,T2,tags2):
-        ##contract 2 tensors
-        #order:the indexs of legs waiting for contracting
+        # contract 2 tensors
+        # order:the indexs of legs waiting for contracting
         order1 = [T1.tags.index(i) for i in tags1]
         order2 = [T2.tags.index(i) for i in tags2]
-        #absorb environment
-        for i in order1:
-            T1.absorbEnv(i)
-        for i in order2:
-            T2.absorbEnv(i)
-        #generate the contribute of the answer
-        tags = []
-        dl = []
-        env = []
-        for i in range(T1.dll):
-            if not (i in order1):
-                tags.append(T1.tags[i])
-                dl.append(T1.dl[i])
-                env.append(T1.env[i])
-        for i in range(T2.dll):
-            if not (i in order2):
-                tags.append(T2.tags[i])
-                dl.append(T2.dl[i])
-                env.append(T2.env[i])
+        # absorb environment
+        TD1 = T1.absorb_env([1 if i in order1 else 0 for i in range(T1.diml)])
+        TD2 = T2.absorb_env([1 if i in order2 else 0 for i in range(T2.diml)])
+        # generate the contribute of the answer
+        tags = [j for i,j in enumerate(T1.tags) if not (i in order1)] + [j for i,j in enumerate(T2.tags) if not (i in order2)]
+        dims = [j for i,j in enumerate(T1.dims) if not (i in order1)] + [j for i,j in enumerate(T2.dims) if not (i in order2)]
+        env = [j for i,j in enumerate(T1.env) if not (i in order1)] + [j for i,j in enumerate(T2.env) if not (i in order2)]
         #initiate the answer
-        T = Node(tags,dl)
-        T.data = np.tensordot(T1.data,T2.data,[order1,order2])
-        T.env = env;
+        T = Node(tags,dims,np.tensordot(TD1,TD2,[order1,order2],env))
         #pollish the repeated tags
         for x in T1.tags:
             if x in tags1:
@@ -79,15 +72,41 @@ class Node:
         #0 初始缩并
         i1 = T1.find_leg_index(tag1)
         i2 = T2.find_leg_index(tag2)
+<<<<<<< HEAD
         TempT = Node.contract(T1,[tag1],T2,[tag2])
         TempT = Node.contract(TempT,["phy","phy'"],H,["lowerLeft","lowerRight"])
         #1 乘 Env
-        TD = TempT.copy()
-        TD.absorbAllEnv(2)
-        TD = TD.data
+        TD = TempT.absorb_env([2 * np.ones(TempT.diml, dtype=int)])
         #2 SVD
+        assert T1.dim[i1] == T2.dim[i2]
         temp = list(range(T1.dll-2)) + [TempT.dll-2] + list(range(T1.dll-2,TempT.dll-2)) + [TempT.dll-1]
         TD = np.transpose(TD,temp)
+=======
+        assert T1.dl[i1] == T2.dl[i2]
+        TD1 = T1.data.copy()
+        TD2 = T2.data.copy()
+        for i,j in enumerate(T1.env):
+            tmp = np.ones(T1.dll+1,dtype=np.int)
+            tmp[i] = T1.dl[i]
+            if i==i1:
+                TD1 *= np.reshape(j,tmp)
+            else:
+                TD1 *= np.reshape(j*j,tmp)
+        for i,j in enumerate(T2.env):
+            tmp = np.ones(T2.dll+1,dtype=np.int)
+            tmp[i] = T2.dl[i]
+            if i==i2:
+                TD2 *= np.reshape(j,tmp)
+            else:
+                TD2 *= np.reshape(j*j,tmp)
+        #2 两个Tensor相乘
+        TD = np.tensordot(TD1,TD2,[[i1],[i2]])
+        #3 乘上Hamiltonian
+        TD = np.tensordot(TD,H,[[T1.dll-1,-1],[0,1]])
+        tmp = list(range(T1.dll-1))+[T1.dll+T2.dll-2]+list(range(T1.dll-1,T1.dll+T2.dll-2))+[T1.dll+T2.dll-1]
+        TD = np.transpose(TD,tmp)
+        #4 SVD
+>>>>>>> HaoZhang
         sh = TD.shape
         sh1 = list(sh[:T1.dll-1])
         sh2 = list(sh[T1.dll-1:])
@@ -105,10 +124,26 @@ class Node:
         o2 = list(range(1,i2+1)) + [0] + list(range(i2+1,T2.dll))
         T1.data = np.transpose(U,o1)
         T2.data = np.transpose(V,o2)
+<<<<<<< HEAD
         #3 吐Env
         T1.absorbAllEnv(-2)
         T1.absorbEnv(i1,2)
         T2.absorbAllEnv(-2)
         T2.absorbEnv(i2,2)
+=======
+        #5 吐Env
+        for i,j in enumerate(T1.env):
+            if i is i1:
+                continue
+            tmp = np.ones(T1.dll+1,dtype=np.int)
+            tmp[i] = T1.dl[i]
+            T1.data /= np.reshape(j*j,tmp)
+        for i,j in enumerate(T2.env):
+            if i is i2:
+                continue
+            tmp = np.ones(T2.dll+1,dtype=np.int)
+            tmp[i] = T2.dl[i]
+            T2.data /= np.reshape(j*j,tmp)
+>>>>>>> HaoZhang
         T1.data/=np.max(np.abs(T1.data))
         T2.data/=np.max(np.abs(T2.data))
