@@ -1,6 +1,6 @@
-max(abs(x))
-matmul(x,y) -> tensordot
+max(abs(x))                    cblas_idamax
+matmul(x,y) -> tensordot       cblas_dgemm
 svd(x)
 random()
 transpose(x,t) -> transpose
-
+copy()
