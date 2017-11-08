@@ -20,6 +20,8 @@ H = np.reshape([[0.25,0,0,0],[0,-0.25,0.5,0],[0,0.5,-0.25,0],[0,0,0,0.25]],[2,2,
 I = np.reshape(np.identity(4),[2,2,2,2])
 expH = Node(["lowerLeft","lowerRight","upperLeft","upperRight"],[2,2,2,2])
 expH.data = I - 4.*ep*H
+TH = Node(["lowerLeft","lowerRight","upperLeft","upperRight"],[2,2,2,2])
+TH.data = H
 
 for _ in range(100):
 <<<<<<< HEAD
@@ -52,7 +54,7 @@ Norm = Node.contract(Norm,["d","phy","phy'"],temp,["l","phy","phy'"])
 Norm = Node.contract(Norm,["r","r'"],Right,["u","d"])
 
 Energy = Node.contract(Left,["u"],temp,["l"])
-temp = Node.contract(temp,["phy","phy'"],expH,["lowerLeft","lowerRight"])
+temp = Node.contract(temp,["phy","phy'"],TH,["lowerLeft","lowerRight"])
 Energy = Node.contract(Energy,["d","phy","phy'"],temp,["l","upperLeft","upperRight"])
 Energy = Node.contract(Energy,["r","r'"],Right,["u","d"])
 
