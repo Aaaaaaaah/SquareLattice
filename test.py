@@ -11,6 +11,13 @@ Node.connect(A,"l",B,"l")
 H = np.reshape([1,0,0,0,0,-1,0,0,0,0,-1,0,0,0,0,1],[2,2,2,2])
 
 Node.update(A,"l",B,"l",H)
-Node.update(A,"l",B,"l",H)
-Node.update(A,"l",B,"l",H)
+print A.data
+print B.data
 
+Node.update(A,"l",B,"l",H)
+print A.data
+print B.data
+
+Node.update(A,"l",B,"l",H)
+print A.data
+print B.data

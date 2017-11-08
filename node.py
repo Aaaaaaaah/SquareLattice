@@ -9,7 +9,7 @@ class Node:
         if data is not None:
             self.data = np.array(data,dtype=np.float32)
             self.data /= np.max(np.abs(self.data))
-            assert self.data.shape == dl+[dp]
+            assert list(self.data.shape) == dl+[dp]
         else:
             self.data = np.random.random(dl+[dp])
         if env is not None:
@@ -17,8 +17,8 @@ class Node:
             for i,j in zip(env,dl):
                 tmp = np.array(i,dtype=np.float32)
                 tmp = tmp/np.max(np.abs(tmp))
-                assert tmp.shape == j
-                self.env.push(tmp)
+                assert tmp.shape == (j,)
+                self.env.append(tmp)
         else:
             self.env = [np.ones(i) for i in dl]
         self.dl = dl # dimensions of lattice
