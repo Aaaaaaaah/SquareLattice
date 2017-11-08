@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from functools import reduce
 
 class Node:
 
     def __init__(self,tags,dims,data=None,envs=None):
         assert len(tags) == len(dims)
+        assert len(set(tags))=len(tags)
         if data is not None:
-            self.data = np.reshape(np.array(data,dtype=np.float32),dims)
+            self.data = np.reshape(np.array(data,dtype=np.float64),dims)
             self.data /= np.max(np.abs(self.data))
         else:
             self.data = np.random.random(dims)
@@ -18,13 +18,13 @@ class Node:
                 if j is None:
                     self.envs.push(np.ones(i))
                 else:
-                    tmp = np.array(j,dtype=np.float32)
-                    tmp = tmp/np.max(np.abs(tmp))
-                    assert tmp.shape == i
+                    tmp = np.array(j,dtype=np.float64)
+                    tmp /= np.max(np.abs(tmp))
+                    assert tmp.shape == (i,)
                     self.envs.push(tmp)
         else:
             self.envs = [np.ones(i) for i in dims]
-        self.dims = np.array(dims)
+        self.dims = np.array(dims,dtype=np.int)
         self.tags = np.array(tags)
 
     def replace(self,other):
@@ -70,7 +70,7 @@ class Node:
         return "Node with dims: %s"%str(self.tags)
 
     @staticmethod
-    def contract(T1,tags1,T2,tags2):
+    def contract(T1,tags1,T2,tags2,tags_dict1=dict(),tags_dict2=dict()):
         # order:the indexs of legs waiting for contracting
         order1 = [T1.tags.index(i) for i in tags1]
         order2 = [T2.tags.index(i) for i in tags2]
@@ -78,10 +78,14 @@ class Node:
         TD1 = Node.absorb_envs(T1,1,order1)
         TD2 = Node.absorb_envs(T2,1,order2)
         # generate the contribute of the answer
-        tags = [j for i,j in enumerate(T1.tags) if i not in order1] + [j for i,j in enumerate(T2.tags) if i not in order2]
+        for i in tags_dict1:
+            assert i in T1.tags and i is not tags1
+        for i in tags_dict2:
+            assert i in T2.tags and i is not tags2
+        tags = [j if j not in tags_dict1 else tags_dict1[j] for i,j in enumerate(T1.tags) if i not in order1] +\
+               [j if j not in tags_dict2 else tags_dict2[j] for i,j in enumerate(T2.tags) if i not in order2]
         dims = [j for i,j in enumerate(T1.dims) if i not in order1] + [j for i,j in enumerate(T2.dims) if i not in order2]
         envs = [j for i,j in enumerate(T1.envs) if i not in order1] + [j for i,j in enumerate(T2.envs) if i not in order2]
-        assert len(tags) == len(set(tags))
         #initiate the answer
         T = Node(tags,dims,np.tensordot(TD1,TD2,[order1,order2],envs))
         return T
@@ -107,23 +111,27 @@ class Node:
         return T1,T2
 
     @staticmethod
-    def update(T1,tag1,T2,tag2,phy_leg,H,cut=None):
+    def update(T1,tag1,T2,tag2,phy1,phy2,H,cut=None):
         # 准备
-        l1 = T1.dims[T1.tags.index(phy_leg[0])]
-        l2 = T2.dims[T2.tags.index(phy_leg[1])]
-        assert T1.dims[T1.tags.index(tag1)] = T2.dims[T2.tags.index(tag2)]
+        l1 = T1.dims[T1.tags.index(phy1)]
+        l2 = T2.dims[T2.tags.index(phy2)]
         if cut is None:
             cut = T1.dims[T1.tags.index(tag1)]
 
         # 缩并
-        TD = Node.contract(T1,[tag1],T2,[tag2])
+        TD = Node.contract(T1,[tag1],T2,[tag2],
+                           {i:"__1.%s"%i for i in T1.tags if i is not tag1},
+                           {i:"__2.%s"%i for i in T2.tags if i is not tag2})
         tmp = TD.tags
-        HH = Node(["__1","__2"]+phy_leg,[l1,l2,l1,l2],H)
-        TD = Node.contract(TD,phy_leg,H,["__1","__2"]
+        HH = Node(["__1","__2","__1.%s"%phy1,"__2.%s"%phy2],[l1,l2,l1,l2],H)
+        TD = Node.contract(TD,["__1.%s"%phy1,"__2.%s"%phy2],H,["__1","__2"]
         TD.transpose(tmp)
         # SVD
         TD1,TD2 = Node.svd(TD,len(T1.tags)-1,tag1,tag2,cut)
+        TD1.rename_leg({"__1.%s"%i:i for i in T1.tags if i is not phy_leg[0] and i is not tag1})
+        TD2.rename_leg({"__2.%s"%i:i for i in T2.tags if i is not phy_leg[1] and i is not tag2})
         TD1.transpose(T1.tags)
         TD2.transpose(T2.tags)
         T1.replace(TD1)
         T2.replace(TD2)
+
