@@ -49,7 +49,7 @@ H = np.reshape([[0.25,0,0,0],[0,-0.25,0.5,0],[0,0.5,-0.25,0],[0,0,0,0.25]],[2,2,
 I = np.reshape(np.identity(4,dtype=np.float32),[2,2,2,2])
 expH = I - 4.*ep*H
 
-for t in range(1):
+for t in range(4):
     print t
     for i in range(0,L1):
         for j in range(0,L2-1,2):
@@ -64,11 +64,11 @@ for t in range(1):
         for i in range(1,L1-1,2):
             Node.update(lattice[i][j],lattice[i+1][j],"d","u","p","p",expH)
 
+
 config = tf.ConfigProto()
 #config.device_count["GPU"] = 0
 #config.gpu_options.allow_growth = True
 #config.graph_options.optimizer_options.global_jit_level=tf.OptimizerOptions.ON_1
-config.log_device_placement = True
 sess = tf.Session(config=config)
 sess.run(tf.global_variables_initializer())
 
