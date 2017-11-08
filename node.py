@@ -6,7 +6,7 @@ class Node:
 
     def __init__(self,tags,dims,data=None,envs=None):
         assert len(tags) == len(dims)
-        assert len(set(tags))=len(tags)
+        assert len(set(tags)) == len(tags)
         if data is not None:
             self.data = np.reshape(np.array(data,dtype=np.float64),dims)
             self.data /= np.max(np.abs(self.data))
@@ -16,16 +16,16 @@ class Node:
             self.envs = []
             for i,j in zip(dims,envs):
                 if j is None:
-                    self.envs.push(np.ones(i))
+                    self.envs.append(np.ones(i))
                 else:
                     tmp = np.array(j,dtype=np.float64)
                     tmp /= np.max(np.abs(tmp))
                     assert tmp.shape == (i,)
-                    self.envs.push(tmp)
+                    self.envs.append(tmp)
         else:
             self.envs = [np.ones(i) for i in dims]
-        self.dims = np.array(dims,dtype=np.int)
-        self.tags = np.array(tags)
+        self.dims = list(dims)
+        self.tags = list(tags)
 
     def replace(self,other):
         self.data = other.data
@@ -36,20 +36,31 @@ class Node:
     @staticmethod
     def copy(self):
         return Node(self.tags,self.dims,self.data,self.envs)
+    @staticmethod
+    def connect(T1,tag1,T2,tag2):
+        T1.envs[T1.tags.index(tag1)] = T2.envs[T2.tags.index(tag2)]
 
     def rename_leg(self,tag_dict):
         for i,j in tag_dict.items():
-            self.tags[self.find_leg_index(i)] = j
+            self.tags[self.tags.index(i)] = j
 
     @staticmethod
     def absorb_envs(self,pow,legs=None):
+        ans = self.data.copy()
         if legs == None:
             legs = range(len(self.dims))
         for i in legs:
             tmp = np.ones(len(self.dims),dtype=int)
-            tmp[i] = sself.dims[i]
+            tmp[i] = self.dims[i]
             ans *= np.reshape(np.power(self.envs[i],pow),tmp)
         return ans
+
+    @staticmethod
+    def transpose(self,tags):
+        data = np.transpose(self.data,[self.tags.index(i) for i in tags])
+        dims = [self.dims[self.tags.index(i)] for i in tags]
+        envs = [self.envs[self.tags.index(i)] for i in tags]
+        return Node(tags,dims,data,envs)
 
     def transpose(self,tags):
         self.data = np.transpose(self.data,[self.tags.index(i) for i in tags])
@@ -58,13 +69,6 @@ class Node:
         tmp = self.envs
         self.envs = [tmp[self.tags.index(i)] for i in tags]
         self.tags = tags
-
-    @staticmethod
-    def transpose(self,tags):
-        data = np.transpose(self.data,[self.tags.index(i) for i in tags])
-        dims = [self.dims[self.tags.index(i)] for i in tags]
-        envs = [self.envs[self.tags.index(i)] for i in tags]
-        return Node(tags,dims,data,envs)
 
     def __repr__(self):
         return "Node with dims: %s"%str(self.tags)
@@ -87,7 +91,7 @@ class Node:
         dims = [j for i,j in enumerate(T1.dims) if i not in order1] + [j for i,j in enumerate(T2.dims) if i not in order2]
         envs = [j for i,j in enumerate(T1.envs) if i not in order1] + [j for i,j in enumerate(T2.envs) if i not in order2]
         #initiate the answer
-        T = Node(tags,dims,np.tensordot(TD1,TD2,[order1,order2],envs))
+        T = Node(tags,dims,np.tensordot(TD1,TD2,[order1,order2]),envs)
         return T
 
     @staticmethod
@@ -96,7 +100,7 @@ class Node:
         dims2 = self.dims[num:]
         data1, env, data2 = np.linalg.svd(
             np.reshape(
-                Node.absorb_envs(self,2)
+                Node.absorb_envs(self,2),
                 [np.prod(dims1),np.prod(dims2)])
         )
         tags1 = self.tags[:num] + [tag1]
@@ -111,7 +115,7 @@ class Node:
         return T1,T2
 
     @staticmethod
-    def update(T1,tag1,T2,tag2,phy1,phy2,H,cut=None):
+    def update(T1,T2,tag1,tag2,phy1,phy2,H,cut=None):
         # 准备
         l1 = T1.dims[T1.tags.index(phy1)]
         l2 = T2.dims[T2.tags.index(phy2)]
@@ -124,12 +128,12 @@ class Node:
                            {i:"__2.%s"%i for i in T2.tags if i is not tag2})
         tmp = TD.tags
         HH = Node(["__1","__2","__1.%s"%phy1,"__2.%s"%phy2],[l1,l2,l1,l2],H)
-        TD = Node.contract(TD,["__1.%s"%phy1,"__2.%s"%phy2],H,["__1","__2"]
+        TD = Node.contract(TD,["__1.%s"%phy1,"__2.%s"%phy2],HH,["__1","__2"])
         TD.transpose(tmp)
         # SVD
         TD1,TD2 = Node.svd(TD,len(T1.tags)-1,tag1,tag2,cut)
-        TD1.rename_leg({"__1.%s"%i:i for i in T1.tags if i is not phy_leg[0] and i is not tag1})
-        TD2.rename_leg({"__2.%s"%i:i for i in T2.tags if i is not phy_leg[1] and i is not tag2})
+        TD1.rename_leg({"__1.%s"%i:i for i in T1.tags if i is not tag1})
+        TD2.rename_leg({"__2.%s"%i:i for i in T2.tags if i is not tag2})
         TD1.transpose(T1.tags)
         TD2.transpose(T2.tags)
         T1.replace(TD1)
