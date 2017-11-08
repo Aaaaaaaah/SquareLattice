@@ -103,7 +103,7 @@ class Node:
                 Node.absorb_envs(self,2),
                 [np.prod(dims1),np.prod(dims2)])
         )
-        env = env[:cut]
+        env = np.sqrt(env[:cut])
         data1 = data1[:,:cut]
         data2 = data2[:cut,:]
         tags1 = self.tags[:num] + [tag1]
