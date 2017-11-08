@@ -8,10 +8,12 @@ class Node:
     def __init__(self,tags,dl,dp,data=None,env=None):
         if data:
             self.data = np.array(data,dtype=np.float32)
+            self.data /= np.max(np.abs(self.data))
         else:
             self.data = np.random.random(dl+[dp])
         if env:
             self.env = [np.array(i,dtype=np.float32) for i in env ]
+            self.env = [i/np.max(np.abs(i)) for i in self.env ]
         else:
             self.env = [np.ones(i) for i in dl]
         self.dl = dl # dimensions of lattice
@@ -40,17 +42,24 @@ class Node:
         for i,j in enumerate(T1.env):
             tmp = np.ones(T1.dll+1,dtype=np.int)
             tmp[i] = T1.dl[i]
-            TD1 *= np.reshape(j*j,tmp)
+            if i==i1:
+                TD1 *= np.reshape(j,tmp)
+            else:
+                TD1 *= np.reshape(j*j,tmp)
         for i,j in enumerate(T2.env):
             tmp = np.ones(T2.dll+1,dtype=np.int)
             tmp[i] = T2.dl[i]
-            TD2 *= np.reshape(j*j,tmp)
+            if i==i2:
+                TD2 *= np.reshape(j,tmp)
+            else:
+                TD2 *= np.reshape(j*j,tmp)
         #2 两个Tensor相乘
         TD = np.tensordot(TD1,TD2,[[i1],[i2]])
         #3 乘上Hamiltonian
         TD = np.tensordot(TD,H,[[T1.dll-1,-1],[0,1]])
         tmp = list(range(T1.dll-1))+[T1.dll+T2.dll-2]+list(range(T1.dll-1,T1.dll+T2.dll-2))+[T1.dll+T2.dll-1]
         TD = np.transpose(TD,tmp)
+        print TD
         #4 SVD
         sh = TD.shape
         sh1 = list(sh[:T1.dll])
