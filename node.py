@@ -5,9 +5,15 @@ from functools import reduce
 
 class Node:
 
-    def __init__(self,tags,dl,dp):
-        self.data = np.random.random(dl+[dp])
-        self.env = [np.ones(i) for i in dl]
+    def __init__(self,tags,dl,dp,data=None,env=None):
+        if data:
+            self.data = np.array(data,dtype=np.float32)
+        else:
+            self.data = np.random.random(dl+[dp])
+        if env:
+            self.env = [np.array(i,dtype=np.float32) for i in env ]
+        else:
+            self.env = [np.ones(i) for i in dl]
         self.dl = dl # dimensions of lattice
         self.dll = len(dl) # length of dimensions of lattice
         self.dp = dp # dimensions of physics
@@ -78,5 +84,3 @@ class Node:
             TD2 /= np.reshape(j*j,tmp)
         T1.data/=np.max(np.abs(T1.data))
         T2.data/=np.max(np.abs(T2.data))
-        print(T1.env[0])
-        print(T1.env[1])
