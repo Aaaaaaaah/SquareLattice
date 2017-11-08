@@ -62,7 +62,6 @@ class Node:
         TD = np.tensordot(TD,H,[[T1.dll-1,-1],[0,1]])
         tmp = list(range(T1.dll-1))+[T1.dll+T2.dll-2]+list(range(T1.dll-1,T1.dll+T2.dll-2))+[T1.dll+T2.dll-1]
         TD = np.transpose(TD,tmp)
-        print TD
         #4 SVD
         sh = TD.shape
         sh1 = list(sh[:T1.dll])
@@ -87,12 +86,12 @@ class Node:
                 continue
             tmp = np.ones(T1.dll+1,dtype=np.int)
             tmp[i] = T1.dl[i]
-            TD1 /= np.reshape(j*j,tmp)
+            T1.data /= np.reshape(j*j,tmp)
         for i,j in enumerate(T2.env):
             if i is i2:
                 continue
             tmp = np.ones(T2.dll+1,dtype=np.int)
             tmp[i] = T2.dl[i]
-            TD2 /= np.reshape(j*j,tmp)
+            T2.data /= np.reshape(j*j,tmp)
         T1.data/=np.max(np.abs(T1.data))
         T2.data/=np.max(np.abs(T2.data))
