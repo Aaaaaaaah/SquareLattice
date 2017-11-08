@@ -8,7 +8,7 @@ B = Node(["l","r","phy"],[D,D,2])
 #Node.connect(A,"l",B,"r")
 #Node.connect(A,"r",B,"l")
 
-ep = 0.1
+ep = 0.01
 
 H = np.reshape([[0.25,0,0,0],[0,-0.25,0.5,0],[0,0.5,-0.25,0],[0,0,0,0.25]],[2,2,2,2])
 I = np.reshape(np.identity(4),[2,2,2,2])
@@ -18,6 +18,8 @@ expH.data = I - 4.*ep*H
 for _ in range(1000):
     Node.update(A,"l",B,"r",expH)
     Node.update(A,"r",B,"l",expH)
+print("A.env",A.env)
+print("B.env",B.env)
 
 Left = Node(["u","d"],[D,D])
 Right = Node(["u","d"],[D,D])
@@ -28,12 +30,14 @@ for _ in range(1000):
     Left = Node.contract(Left,["u"],B,["l"])
     Left = Node.contract(Left,["phy","d"],B,["phy","l"])
     Left.rename(["r","r'"],["u","d"])
+    Left.data /= np.max(np.abs(Left.data))
     Right = Node.contract(Right,["u"],B,["r"])
     Right = Node.contract(Right,["phy","d"],B,["phy","r"])
     Right.rename(["l","l'"],["u","d"])
     Right = Node.contract(Right,["u"],A,["r"])
     Right = Node.contract(Right,["phy","d"],A,["phy","r"])
     Right.rename(["l","l'"],["u","d"])
+    Right.data /= np.max(np.abs(Right.data))
 
 temp = Node.contract(A,["r"],B,["l"])
 Norm = Node.contract(Left,["u"],temp,["l"])
