@@ -71,7 +71,7 @@ class Node:
         self.tags = tags
 
     def __repr__(self):
-        return "Node with dims: %s"%str(self.tags)
+        return "Node with dims: %s"%str(zip(self.tags,self.dims))
 
     @staticmethod
     def contract(T1,tags1,T2,tags2,tags_dict1=dict(),tags_dict2=dict()):
@@ -103,6 +103,9 @@ class Node:
                 Node.absorb_envs(self,2),
                 [np.prod(dims1),np.prod(dims2)])
         )
+        env = env[:cut]
+        data1 = data1[:,:cut]
+        data2 = data2[:cut,:]
         tags1 = self.tags[:num] + [tag1]
         tags2 = [tag2] + self.tags[num:]
         dims1 = dims1 + [cut]

@@ -1,69 +1,24 @@
+# -*- coding: utf-8 -*-
+
 import numpy as np
 from node import Node
 
 D = 8
-<<<<<<< HEAD
-A = Node(["l","r","phy"],[D,D,2])
-B = Node(["l","r","phy"],[D,D,2])
-=======
 
-A = Node(["l","r"],[D,D],2)
-B = Node(["l","r"],[D,D],2)
->>>>>>> HaoZhang
+A = Node(["l","r","p"],[D,D,2])
+B = Node(["l","r","p"],[D,D,2])
 
-#Node.connect(A,"l",B,"r")
-#Node.connect(A,"r",B,"l")
+Node.connect(A,"l",B,"r")
+Node.connect(A,"r",B,"l")
 
 ep = 0.1
 
 H = np.reshape([[0.25,0,0,0],[0,-0.25,0.5,0],[0,0.5,-0.25,0],[0,0,0,0.25]],[2,2,2,2])
 I = np.reshape(np.identity(4),[2,2,2,2])
-expH = Node(["lowerLeft","lowerRight","upperLeft","upperRight"],[2,2,2,2])
-expH.data = I - 4.*ep*H
-TH = Node(["lowerLeft","lowerRight","upperLeft","upperRight"],[2,2,2,2])
-TH.data = H
+expH = I - 4.*ep*H
 
-for _ in range(100):
-<<<<<<< HEAD
-    Node.update(A,"l",B,"r",expH)
-    Node.update(A,"r",B,"l",expH)
-print("A.env",A.env)
-print("B.env",B.env)
+for _ in range(1):
+    Node.update(A,B,"r","l","p","p",expH)
 
-Left = Node(["u","d"],[D,D])
-Right = Node(["u","d"],[D,D])
-for _ in range(1000):
-    Left = Node.contract(Left,["u"],A,["l"])
-    Left = Node.contract(Left,["phy","d"],A,["phy","l"])
-    Left.rename(["r","r'"],["u","d"])
-    Left = Node.contract(Left,["u"],B,["l"])
-    Left = Node.contract(Left,["phy","d"],B,["phy","l"])
-    Left.rename(["r","r'"],["u","d"])
-    Left.data /= np.max(np.abs(Left.data))
-    Right = Node.contract(Right,["u"],B,["r"])
-    Right = Node.contract(Right,["phy","d"],B,["phy","r"])
-    Right.rename(["l","l'"],["u","d"])
-    Right = Node.contract(Right,["u"],A,["r"])
-    Right = Node.contract(Right,["phy","d"],A,["phy","r"])
-    Right.rename(["l","l'"],["u","d"])
-    Right.data /= np.max(np.abs(Right.data))
-
-temp = Node.contract(A,["r"],B,["l"])
-Norm = Node.contract(Left,["u"],temp,["l"])
-Norm = Node.contract(Norm,["d","phy","phy'"],temp,["l","phy","phy'"])
-Norm = Node.contract(Norm,["r","r'"],Right,["u","d"])
-
-Energy = Node.contract(Left,["u"],temp,["l"])
-temp = Node.contract(temp,["phy","phy'"],TH,["lowerLeft","lowerRight"])
-Energy = Node.contract(Energy,["d","phy","phy'"],temp,["l","upperLeft","upperRight"])
-Energy = Node.contract(Energy,["r","r'"],Right,["u","d"])
-
-print(Energy.data / Norm.data)
-=======
-    Node.update(A,"r",B,"l",expH)
-    Node.update(B,"r",A,"l",expH)
-    Node.update(B,"r",A,"l",expH)
-    Node.update(A,"r",B,"l",expH)
-
-print A.env
->>>>>>> HaoZhang
+print A
+print A.envs
