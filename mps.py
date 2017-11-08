@@ -17,7 +17,7 @@ H = np.reshape([[0.25,0,0,0],[0,-0.25,0.5,0],[0,0.5,-0.25,0],[0,0,0,0.25]],[2,2,
 I = np.reshape(np.identity(4),[2,2,2,2])
 expH = I - 4.*ep*H
 
-for _ in range(10):
+for _ in range(100):
     Node.update(A,"r",B,"l",expH)
     Node.update(B,"r",A,"l",expH)
     Node.update(B,"r",A,"l",expH)
