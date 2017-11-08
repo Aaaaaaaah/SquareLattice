@@ -23,4 +23,4 @@ for _ in range(100):
     Node.update(A,B,"l","r","p","p",expH)
     Node.update(A,B,"r","l","p","p",expH)
 
-print A.envs[:2]
+print(A.envs[:2])
