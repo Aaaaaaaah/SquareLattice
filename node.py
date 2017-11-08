@@ -6,12 +6,12 @@ from functools import reduce
 class Node:
 
     def __init__(self,tags,dl,dp,data=None,env=None):
-        if data:
+        if data is not None:
             self.data = np.array(data,dtype=np.float32)
             self.data /= np.max(np.abs(self.data))
         else:
             self.data = np.random.random(dl+[dp])
-        if env:
+        if env is not None:
             self.env = [np.array(i,dtype=np.float32) for i in env ]
             self.env = [i/np.max(np.abs(i)) for i in self.env ]
         else:
@@ -20,6 +20,9 @@ class Node:
         self.dll = len(dl) # length of dimensions of lattice
         self.dp = dp # dimensions of physics
         self.tags = tags # dimensions
+
+    def copy(self):
+        return Node(self.tags,self.dl,self.dp,data=self.data,env=self.env)
 
     def find_leg_index(self,tag):
         return self.tags.index(tag)
@@ -59,6 +62,7 @@ class Node:
         TD = np.tensordot(TD,H,[[T1.dll-1,-1],[0,1]])
         tmp = list(range(T1.dll-1))+[T1.dll+T2.dll-2]+list(range(T1.dll-1,T1.dll+T2.dll-2))+[T1.dll+T2.dll-1]
         TD = np.transpose(TD,tmp)
+        print "TD"
         print TD
         #4 SVD
         sh = TD.shape
@@ -80,13 +84,13 @@ class Node:
         T2.data = np.transpose(V,o2)
         #5 吐Env
         for i,j in enumerate(T1.env):
-            if i == i1:
+            if i is i1:
                 continue
             tmp = np.ones(T1.dll+1,dtype=np.int)
             tmp[i] = T1.dl[i]
             TD1 /= np.reshape(j*j,tmp)
         for i,j in enumerate(T2.env):
-            if i == i2:
+            if i is i2:
                 continue
             tmp = np.ones(T2.dll+1,dtype=np.int)
             tmp[i] = T2.dl[i]
