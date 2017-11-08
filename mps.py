@@ -3,8 +3,8 @@
 import numpy as np
 from node import Node
 
-A = Node(["l","r"],[5,3],2)
-B = Node(["l","r"],[3,5],2)
+A = Node(["l","r"],[2,2],2)
+B = Node(["l","r"],[2,2],2)
 
 Node.connect(A,"l",B,"r")
 Node.connect(A,"r",B,"l")
@@ -18,3 +18,4 @@ expH = I - 4.*ep*H
 for _ in range(10):
     Node.update(A,"l",B,"r",expH)
     Node.update(A,"r",B,"l",expH)
+    print A.env

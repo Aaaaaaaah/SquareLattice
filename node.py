@@ -62,7 +62,6 @@ class Node:
         TD = np.tensordot(TD,H,[[T1.dll-1,-1],[0,1]])
         tmp = list(range(T1.dll-1))+[T1.dll+T2.dll-2]+list(range(T1.dll-1,T1.dll+T2.dll-2))+[T1.dll+T2.dll-1]
         TD = np.transpose(TD,tmp)
-        print "TD"
         print TD
         #4 SVD
         sh = TD.shape
