@@ -24,10 +24,11 @@ def output_program(file):
     """)
 
 class TnspVar:
-    def __init__(self):
+    def __init__(self,shape):
         global var_pool
         self.name = "TNS%d"%len(var_pool)
         var_pool.append(self.name)
+        prog_pool.append("call%s%%allocate(%s,'real')"%(self.name,str(list(shape))))
     def write(self):
         global prog_pool
         prog_pool.append("call %s%%write(6)"%self.name)
