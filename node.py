@@ -33,13 +33,6 @@ class Node:
         self.dims = other.dims
         self.tags = other.tags
 
-    @staticmethod
-    def copy(self):
-        return Node(self.tags,self.dims,self.data,self.envs)
-    @staticmethod
-    def connect(T1,tag1,T2,tag2):
-        T1.envs[T1.tags.index(tag1)] = T2.envs[T2.tags.index(tag2)]
-
     def rename_leg(self,tag_dict):
         for i,j in tag_dict.items():
             self.tags[self.tags.index(i)] = j
@@ -54,13 +47,6 @@ class Node:
             tmp[i] = self.dims[i]
             ans *= np.reshape(np.power(self.envs[i],pow),tmp)
         return ans
-
-    @staticmethod
-    def transpose(self,tags):
-        data = np.transpose(self.data,[self.tags.index(i) for i in tags])
-        dims = [self.dims[self.tags.index(i)] for i in tags]
-        envs = [self.envs[self.tags.index(i)] for i in tags]
-        return Node(tags,dims,data,envs)
 
     def transpose(self,tags):
         self.data = np.transpose(self.data,[self.tags.index(i) for i in tags])
