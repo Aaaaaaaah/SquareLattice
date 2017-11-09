@@ -37,6 +37,14 @@ class TnspVar:
         data maybe python array or other TnspVar
         """
         #!!!!
+    def random_init(self):
+        """
+        init data in the tensor with uniform
+        """
+    def ones_init(self):
+        """
+        fill ones in the tensor
+        """
     def div_max(self):
         prog_pool.append("%s=%s/(%s%%dmaxmin(maxabs))"%(self.name,self.name,self.name))
 
@@ -46,21 +54,29 @@ class Node:
         assert len(tags) == len(dims)
         assert len(set(tags)) == len(tags)
         if data is not None:
-            #self.data = np.reshape(np.array(data,dtype=np.float64),dims) #!!!!!
-            #self.data /= np.max(np.abs(self.data)) #!!!
+            #self.data = np.reshape(np.array(data,dtype=np.float64),dims)
+            #self.data /= np.max(np.abs(self.data))
             self.data = TnspVar(dims)
             self.data.fill_data(data)
             self.data.div_max()
         else:
-            self.data = np.random.random(dims) #!!!!
+            #self.data = np.random.random(dims)
+            self.data = TnspVar(dims)
+            self.data.random_init()
         if envs is not None:
             self.envs = []
             for i,j in zip(dims,envs):
                 if j is None:
-                    self.envs.append(np.ones(i)) #!!!!
+                    tmp = TnspVar([i,])
+                    tmp.ones_init()
+                    self.envs.append(tmp)
+                    #self.envs.append(np.ones(i))
                 else:
-                    tmp = np.array(j,dtype=np.float64) #!!!
-                    tmp /= np.max(np.abs(tmp)) #!!!
+                    #tmp = np.array(j,dtype=np.float64)
+                    tmp = TnspVar([i,])
+                    tmp.fill_data(j)
+                    tmp.div_max()
+                    #tmp /= np.max(np.abs(tmp))
                     assert tmp.shape == (i,)
                     self.envs.append(tmp)
         else:
