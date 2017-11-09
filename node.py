@@ -32,6 +32,13 @@ class TnspVar:
     def write(self):
         global prog_pool
         prog_pool.append("call %s%%write(6)"%self.name)
+    def fill_data(self,data):
+        """
+        data maybe python array or other TnspVar
+        """
+        #!!!!
+    def div_max(self):
+        prog_pool.append("%s=%s/(%s%%dmaxmin(maxabs))"%(self.name,self.name,self.name))
 
 class Node:
 
@@ -39,8 +46,11 @@ class Node:
         assert len(tags) == len(dims)
         assert len(set(tags)) == len(tags)
         if data is not None:
-            self.data = np.reshape(np.array(data,dtype=np.float64),dims) #!!!!!
-            self.data /= np.max(np.abs(self.data)) #!!!
+            #self.data = np.reshape(np.array(data,dtype=np.float64),dims) #!!!!!
+            #self.data /= np.max(np.abs(self.data)) #!!!
+            self.data = TnspVar(dims)
+            self.data.fill_data(data)
+            self.data.div_max()
         else:
             self.data = np.random.random(dims) #!!!!
         if envs is not None:
