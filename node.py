@@ -80,7 +80,12 @@ class Node:
                     assert tmp.shape == (i,)
                     self.envs.append(tmp)
         else:
-            self.envs = [np.ones(i) for i in dims] #!!!
+            self.envs = []
+            for i in dims:
+                tmp = TnspVar([i,])
+                tmp.ones()
+                self.envs.append(tmp)
+            #self.envs = [np.ones(i) for i in dims]
         self.dims = list(dims)
         self.tags = list(tags)
 
@@ -102,7 +107,7 @@ class Node:
         for i in legs:
             tmp = np.ones(len(self.dims),dtype=int)
             tmp[i] = self.dims[i]
-            temp = tf.reshape(self.envs[i],tmp)
+            temp = tf.reshape(self.envs[i],tmp) #!!!
             if pow > 0:
                 for _ in range(pow):
                     ans *= temp #!!!!
