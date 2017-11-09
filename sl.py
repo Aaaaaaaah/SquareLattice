@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import node
 from node import Node
 
 L1 = 4
@@ -62,4 +63,6 @@ for t in range(10):
         for i in range(1,L1-1,2):
             Node.update(lattice[i][j],lattice[i+1][j],"d","u","p","p",expH)
 
-print lattice[1][1].envs
+import sys
+lattice[1][1].write()
+node.output_program(sys.stdout)
