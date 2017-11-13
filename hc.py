@@ -50,7 +50,7 @@ I = np.reshape(np.identity(4),[2,2,2,2])
 expH = lambda x:I - x*ep*H
 
 for t in range(10):
-    print t
+    print(t)
     for i in range(0,L1):
         for j in range(i%2,L2-1,2):
             Node.update(lattice[i][j],lattice[i][j+1],"r","l","p","p",expH(1))
@@ -61,4 +61,4 @@ for t in range(10):
         for i in range((j+1)%2,L1-1,2):
             Node.update(lattice[i][j],lattice[i+1][j],"d","u","p","p",expH(3))
 
-print lattice[1][1].envs
+print(lattice[1][1].envs)
