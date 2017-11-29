@@ -4,21 +4,21 @@ import numpy as np
 
 class Node:
 
-    def __init__(self,tags,dims,data=None,envs=None):
+    def __init__(self, tags, dims, data=None, envs=None):
         assert len(tags) == len(dims)
         assert len(set(tags)) == len(tags)
         if data is not None:
-            self.data = np.reshape(np.array(data,dtype=np.float64),dims)
+            self.data = np.reshape(np.array(data,dtype=np.float64), dims)
             self.data /= np.max(np.abs(self.data))
         else:
             self.data = np.random.random(dims)
         if envs is not None:
             self.envs = []
-            for i,j in zip(dims,envs):
+            for i,j in zip(dims, envs):
                 if j is None:
                     self.envs.append(np.ones(i))
                 else:
-                    tmp = np.array(j,dtype=np.float64)
+                    tmp = np.array(j, dtype=np.float64)
                     tmp /= np.max(np.abs(tmp))
                     assert tmp.shape == (i,)
                     self.envs.append(tmp)
@@ -38,14 +38,14 @@ class Node:
             self.tags[self.tags.index(i)] = j
 
     @staticmethod
-    def absorb_envs(self,pow,legs=None):
+    def absorb_envs(self, pow, legs=None):
         ans = self.data.copy()
         if legs == None:
             legs = range(len(self.dims))
         for i in legs:
-            tmp = np.ones(len(self.dims),dtype=int)
+            tmp = np.ones(len(self.dims), dtype=int)
             tmp[i] = self.dims[i]
-            ans *= np.reshape(np.power(self.envs[i],pow),tmp)
+            ans *= np.reshape(np.power(self.envs[i],pow), tmp)
         return ans
 
     def transpose(self,tags):
@@ -81,23 +81,23 @@ class Node:
         return T
 
     @staticmethod
-    def svd(self,num,tag1,tag2,cut):
-        dims1 = self.dims[:num]
-        dims2 = self.dims[num:]
+    def svd(tensor,num,tag1,tag2,cut):
+        dims1 = tensor.dims[:num]
+        dims2 = tensor.dims[num:]
         data1, env, data2 = np.linalg.svd(
             np.reshape(
-                Node.absorb_envs(self,2),
+                Node.absorb_envs(tensor,2),
                 [np.prod(dims1),np.prod(dims2)])
         )
         env = np.sqrt(env[:cut])
         data1 = data1[:,:cut]
         data2 = data2[:cut,:]
-        tags1 = self.tags[:num] + [tag1]
-        tags2 = [tag2] + self.tags[num:]
+        tags1 = tensor.tags[:num] + [tag1]
+        tags2 = [tag2] + tensor.tags[num:]
         dims1 = dims1 + [cut]
         dims2 = [cut] + dims2
-        envs1 = self.envs[:num] + [env]
-        envs2 = [env] + self.envs[num:]
+        envs1 = tensor.envs[:num] + [env]
+        envs2 = [env] + tensor.envs[num:]
         T1,T2 = Node(tags1,dims1,data1,envs1),Node(tags2,dims2,data2,envs2)
         T1.data = Node.absorb_envs(T1,-2,range(len(dims1)-1))
         T2.data = Node.absorb_envs(T2,-2,range(1,len(dims2)))
