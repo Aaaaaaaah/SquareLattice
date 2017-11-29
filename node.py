@@ -51,6 +51,14 @@ class Node(object):
         self.tags = list(tags)
 
     def replace(self, other):
+        """Replace itself with another node.
+
+        A copy method, copy all attributes from the other node
+        into this node.
+
+        Args:
+            other: another node object
+        """
         self.data = other.data
         self.envs = other.envs
         self.dims = other.dims
