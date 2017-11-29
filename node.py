@@ -49,6 +49,7 @@ class Node(object):
             self.envs = [np.ones(i) for i in dims]
         self.dims = list(dims)
         self.tags = list(tags)
+        self.envf = True
 
     def replace(self, other):
         """Replace itself with another node.
@@ -113,6 +114,10 @@ class Node(object):
         self.envs = []
         for i in dims:
             self.envs.append(np.ones(i))
+        self.envf = False
+
+    def use_envs(self):
+        self.envf = True
 
     def transpose(self, tags):
         """Transpose the tensor data of the Node
@@ -126,6 +131,26 @@ class Node(object):
         tmp = self.envs
         self.envs = [tmp[self.tags.index(i)] for i in tags]
         self.tags = tags
+
+    def qr(self, tag):
+        if self.envf:
+            self.delete_envs()
+        tbak = list(self.tags)
+        tags = list(self.tags)
+        del tags[tags.index(tag)]
+        tags.append(tag)
+        self.transpose(tags)
+        shape = [np.prod(self.dims[:-1]), dims[-1]]
+        q, r = np.linalg.qr(np.reshape(self.data, shape)
+        #q M*K => M*N
+        #r K*N => N*N
+        q = np.pad(q, ((0, 0), (0, shape[1]-q.shape[1])),
+                   'constant', constant_values=0)
+        r = np.pad(r, ((0, 0), (shape[1]-r.shape[0], 0)),
+                   'constant', constant_values=0)
+        self.data = np.reshape(q,self.dims)
+        self.transpose(tbak)
+        return r
 
     def __repr__(self):
         return "Node with dims: %s"%str(zip(self.tags, self.dims))
