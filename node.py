@@ -3,6 +3,17 @@
 import numpy as np
 
 class Node(object):
+    """Node of the lattice
+
+    Represent one node in the whole network and support necessary
+    operations on node.
+
+    Attribute:
+        tags: the name of each dimension
+        dims: the order of each dimension
+        data: the tensor data of the node.
+        envs: the environments of each dimension
+    """
 
     def __init__(self, tags, dims, data=None, envs=None):
         """Initiate the Node
@@ -16,7 +27,6 @@ class Node(object):
             dims: the order of each dimension
             data: the tensor data of the node.
             envs: the environments of each dimension
-
         """
         assert len(tags) == len(dims)
         assert len(set(tags)) == len(tags)
