@@ -90,6 +90,9 @@ class Node(object):
                 argument is below 0, it means release.
             legs: determine which dimensions to be absorb.
                 if legs are none, then absorb all dimensions.
+
+        Returns:
+            ans: the tensor of data having absorbed the environments.
         """
         ans = tensor.data.copy()
         if legs is None:
@@ -101,12 +104,22 @@ class Node(object):
         return ans
 
     def delete_envs(self):
+        """Delete the environments
+
+        Put all environments into the data, and reset all environment to 1
+        So no influence from environments any more.
+        """
         self.data = Node.absorb_envs(self, 1)
         self.envs = []
         for i in dims:
             self.envs.append(np.ones(i))
 
     def transpose(self, tags):
+        """Transpose the tensor data of the Node
+
+        Args:
+            tags: new arrangement of the old dimension names
+        """
         self.data = np.transpose(self.data, [self.tags.index(i) for i in tags])
         tmp = self.dims
         self.dims = [tmp[self.tags.index(i)] for i in tags]
