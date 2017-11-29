@@ -9,7 +9,7 @@ class Node:
         assert len(set(tags)) == len(tags)
         if data is not None:
             self.data = np.reshape(np.array(data,dtype=np.float64),dims)
-            self.data /= np.max(np.abs(self.data))
+            ##self.data /= np.max(np.abs(self.data))
         else:
             self.data = np.random.random(dims)
         if envs is not None:
@@ -19,7 +19,7 @@ class Node:
                     self.envs.append(np.ones(i))
                 else:
                     tmp = np.array(j,dtype=np.float64)
-                    tmp /= np.max(np.abs(tmp))
+                    ##tmp /= np.max(np.abs(tmp))
                     assert tmp.shape == (i,)
                     self.envs.append(tmp)
         else:
@@ -64,14 +64,14 @@ class Node:
         # order:the indexs of legs waiting for contracting
         order1 = [T1.tags.index(i) for i in tags1]
         order2 = [T2.tags.index(i) for i in tags2]
-        # absorb envsironment
+        # absorb environment
         TD1 = Node.absorb_envs(T1,1,order1)
         TD2 = Node.absorb_envs(T2,1,order2)
         # generate the contribute of the answer
         for i in tags_dict1:
-            assert i in T1.tags and i is not tags1
+            assert i in T1.tags and i not in tags1
         for i in tags_dict2:
-            assert i in T2.tags and i is not tags2
+            assert i in T2.tags and i not in tags2
         tags = [j if j not in tags_dict1 else tags_dict1[j] for i,j in enumerate(T1.tags) if i not in order1] +\
                [j if j not in tags_dict2 else tags_dict2[j] for i,j in enumerate(T2.tags) if i not in order2]
         dims = [j for i,j in enumerate(T1.dims) if i not in order1] + [j for i,j in enumerate(T2.dims) if i not in order2]
