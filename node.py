@@ -65,6 +65,13 @@ class Node(object):
         self.tags = other.tags
 
     def rename_leg(self, tag_dict):
+        """Rename the dimensions
+
+        Give the dimensions some other names.
+
+        Args:
+            tag_dict: the new names of each dimension
+        """
         for i, j in tag_dict.items():
             self.tags[self.tags.index(i)] = j
 
