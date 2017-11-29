@@ -51,6 +51,9 @@ class Node(object):
         self.tags = list(tags)
         self.envf = True
 
+    def copy(self):
+        return Node(self.tags, self.dims, self.data, self.envs)
+
     def replace(self, other):
         """Replace itself with another node.
 
@@ -90,7 +93,7 @@ class Node(object):
     def delete_envs(self):
         self.data = Node.absorb_envs(self, 1)
         self.envs = []
-        for i in dims:
+        for i in self.dims:
             self.envs.append(np.ones(i))
         self.envf = False
 
@@ -113,7 +116,7 @@ class Node(object):
         del tags[tags.index(tag)]
         tags.append(tag)
         self.transpose(tags)
-        shape = [np.prod(self.dims[:-1]), dims[-1]]
+        shape = [np.prod(self.dims[:-1]), self.dims[-1]]
         q, r = np.linalg.qr(np.reshape(self.data, shape))
         q = np.pad(q, ((0, 0), (0, shape[1]-q.shape[1])),
                    'constant', constant_values=0)
@@ -122,6 +125,16 @@ class Node(object):
         self.data = np.reshape(q, self.dims)
         self.transpose(tbak)
         return r
+
+    def matrix_multiply(self, tag, r, r_ind):
+        if self.envf:
+            self.delete_envs()
+        tbak = list(self.tags)
+        ind = self.tags.index(tag)
+        del self.tags[ind]
+        self.tags.append(tag)
+        self.data = np.tensordot(self.data, r, ((ind), (r_ind)))
+        self.transpose(tbak)
 
     def __repr__(self):
         return "Node with dims: %s"%str(zip(self.tags, self.dims))
