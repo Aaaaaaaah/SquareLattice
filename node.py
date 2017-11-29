@@ -4,79 +4,79 @@ import numpy as np
 
 var_pool = []
 prog_pool = []
+modules = ["tools","tensor_type"]
+program_name = "main"
 
 def output_program(file):
     global var_pool
     global prog_pool
-    file.write("""
-    program main
-    use tools
-    use tensor_type
-
-    implicit none
-    """)
+    file.write("program %s\n"%program_name)
+    for i in modules:
+        file.write("use %s\n"%i)
+    file.write("implicit none\n")
     for i in var_pool:
         file.write("type(tensor):: %s\n"%i)
     for i in prog_pool:
         file.write("%s\n"%i)
-    file.write("""
-    end program main
-    """)
+    file.write("end program %s\n"%program_name)
 
 class TnspVar:
     def __init__(self,shape):
         global var_pool
-        self.name = "TNS%d"%len(var_pool)
-        var_pool.append(self.name)
-        prog_pool.append("call%s%%allocate(%s,'real')"%(self.name,str(list(shape))))
+        self.data = "TNS%d"%len(var_pool)
+        var_pool.append(self.data)
+        prog_pool.append("call%s%%allocate(%s,'real')"%(self.data,str(list(shape))))
     def write(self):
         global prog_pool
-        prog_pool.append("call %s%%write(6)"%self.name)
+        prog_pool.append("call %s%%write(6)"%self.data)
     def fill_data(self,data):
         """
         data maybe python array or other TnspVar
         """
-        #!!!!
+        if isinstance(data,TnspVar):
+            #!!!
+        else:
+            #!!!!
+            pass
     def random_init(self):
         """
         init data in the tensor with uniform
         """
+        global prog_pool
+        prog.pool.append("call %s%%random()"%self.data)
     def ones_init(self):
         """
         fill ones in the tensor
         """
+        global prog_pool
+        prog.pool.append("call %s%%setValue(1)"%self.data)
     def div_max(self):
-        prog_pool.append("%s=%s/(%s%%dmaxmin(maxabs))"%(self.name,self.name,self.name))
+        global prog_pool
+        prog_pool.append("%s=%s/(%s%%dmaxmin(maxabs))"%(self.data,self.data,self.data))
 
-class Node:
+class Node(TnspVar):
 
     def __init__(self,tags,dims,data=None,envs=None):
         assert len(tags) == len(dims)
         assert len(set(tags)) == len(tags)
         if data is not None:
-            #self.data = np.reshape(np.array(data,dtype=np.float64),dims)
-            #self.data /= np.max(np.abs(self.data))
-            self.data = TnspVar(dims)
-            self.data.fill_data(data)
-            self.data.div_max()
+            super(Node,self).__init__(dims)
+            self.fill_data(data)
+            self.div_max()
         else:
-            #self.data = np.random.random(dims)
-            self.data = TnspVar(dims)
-            self.data.random_init()
+            super(Node,self).__init__(dims)
+            self.random_init()
         if envs is not None:
             self.envs = []
             for i,j in zip(dims,envs):
                 if j is None:
-                    tmp = TnspVar([i,])
+                    mp = TnspVar([i,])
                     tmp.ones_init()
                     self.envs.append(tmp)
-                    #self.envs.append(np.ones(i))
                 else:
-                    #tmp = np.array(j,dtype=np.float64)
                     tmp = TnspVar([i,])
                     tmp.fill_data(j)
                     tmp.div_max()
-                    #tmp /= np.max(np.abs(tmp))
                     assert tmp.shape == (i,)
                     self.envs.append(tmp)
         else:
@@ -85,12 +85,11 @@ class Node:
                 tmp = TnspVar([i,])
                 tmp.ones()
                 self.envs.append(tmp)
-            #self.envs = [np.ones(i) for i in dims]
         self.dims = list(dims)
         self.tags = list(tags)
 
     def replace(self,other):
-        self.data = other.data
+        self.data = other.data#!!!
         self.envs = other.envs
         self.dims = other.dims
         self.tags = other.tags
@@ -101,7 +100,7 @@ class Node:
 
     @staticmethod
     def absorb_envs(self,pow,legs=None):
-        ans = self.data.copy() #!!!!
+        ans = self
         if legs == None:
             legs = range(len(self.dims))
         for i in legs:
@@ -193,6 +192,6 @@ class Node:
         TD2.rename_leg({"__2.%s"%i:i for i in T2.tags if i is not tag2})
         TD1.transpose(T1.tags)
         TD2.transpose(T2.tags)
-        T1.replace(TD1)
-        T2.replace(TD2)
+        T1.replace(TD1) #!!!
+        T2.replace(TD2) #!!!
 
