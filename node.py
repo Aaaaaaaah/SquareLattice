@@ -70,13 +70,27 @@ class Node(object):
         Give the dimensions some other names.
 
         Args:
-            tag_dict: the new names of each dimension
+            tag_dict: the dictionary of old tags and new tags
+                with format {old tags : new tags}
         """
         for i, j in tag_dict.items():
             self.tags[self.tags.index(i)] = j
 
     @staticmethod
     def absorb_envs(tensor, pows, legs=None):
+        """Absorb environments into data
+
+        Absorb environments into data and return the tensor.
+        also release environments function can be obtained by
+        pows below 0
+
+        Args:
+            tensor: the specific Node object to operate
+            pows: the times to absorb the environments, when this
+                argument is below 0, it means release.
+            legs: determine which dimensions to be absorb.
+                if legs are none, then absorb all dimensions.
+        """
         ans = tensor.data.copy()
         if legs is None:
             legs = range(len(tensor.dims))
