@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+This module include class Node
+"""
 
 import numpy as np
 
