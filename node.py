@@ -13,6 +13,7 @@ class Node(object):
         dims: the order of each dimension
         data: the tensor data of the node.
         envs: the environments of each dimension
+        envf: if it is using environments, envf is True, else False
     """
 
     def __init__(self, tags, dims, data=None, envs=None):
@@ -133,6 +134,16 @@ class Node(object):
         self.tags = tags
 
     def qr(self, tag):
+        """QR decomposition
+
+        Decompose self with QR decomposition and return r matrix.
+
+        Args:
+            tag: the dimension need to be decompose
+
+        Returns:
+            r: the R matrix of QR decomposition
+        """
         if self.envf:
             self.delete_envs()
         tbak = list(self.tags)
@@ -155,6 +166,21 @@ class Node(object):
 
     @staticmethod
     def contract(T1, tags1, T2, tags2, tags_dict1=None, tags_dict2=None):
+        """Contract two Node together
+
+        Contract two Node together into a big Node
+
+        Args:
+            T1: the first Node
+            tags1: the dimensions wait to be contracted in T1
+            T1: the second Node
+            tags1: the dimensions wait to be contracted in T2
+            tags_dict1, tags_dict2: if there are contradict names of dimension
+                in T1 and T2, then use the dictionary to fix the contadiction.
+
+        Returns:
+            T: the result of the contraction
+        """
         if tags_dict1 is None:
             tags_dict1 = {}
         if tags_dict2 is None:
