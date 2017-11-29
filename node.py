@@ -141,14 +141,12 @@ class Node(object):
         tags.append(tag)
         self.transpose(tags)
         shape = [np.prod(self.dims[:-1]), dims[-1]]
-        q, r = np.linalg.qr(np.reshape(self.data, shape)
-        #q M*K => M*N
-        #r K*N => N*N
+        q, r = np.linalg.qr(np.reshape(self.data, shape))
         q = np.pad(q, ((0, 0), (0, shape[1]-q.shape[1])),
                    'constant', constant_values=0)
         r = np.pad(r, ((0, 0), (shape[1]-r.shape[0], 0)),
                    'constant', constant_values=0)
-        self.data = np.reshape(q,self.dims)
+        self.data = np.reshape(q, self.dims)
         self.transpose(tbak)
         return r
 
