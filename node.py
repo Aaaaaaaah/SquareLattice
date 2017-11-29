@@ -4,7 +4,20 @@ import numpy as np
 
 class Node:
 
-    def __init__(self,tags,dims,data=None,envs=None):
+    def __init__(self, tags, dims, data=None, envs=None):
+        """Initiate the Node
+
+        Give the Node a tensor data and each dim environments.
+        If data is not given by user, data would be randomly given.
+        If environments are not given, environments would be set as 1.
+
+        Args:
+            tags: the name of each dimension
+            dims: the order of each dimension
+            data: the tensor data of the node.
+            envs: the environments of each dimension
+
+        """
         assert len(tags) == len(dims)
         assert len(set(tags)) == len(tags)
         if data is not None:
