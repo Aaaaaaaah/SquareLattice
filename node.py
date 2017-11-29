@@ -9,7 +9,7 @@ class Node:
         assert len(set(tags)) == len(tags)
         if data is not None:
             self.data = np.reshape(np.array(data,dtype=np.float64),dims)
-            ##self.data /= np.max(np.abs(self.data))
+            self.data /= np.max(np.abs(self.data))
         else:
             self.data = np.random.random(dims)
         if envs is not None:
@@ -19,7 +19,7 @@ class Node:
                     self.envs.append(np.ones(i))
                 else:
                     tmp = np.array(j,dtype=np.float64)
-                    ##tmp /= np.max(np.abs(tmp))
+                    tmp /= np.max(np.abs(tmp))
                     assert tmp.shape == (i,)
                     self.envs.append(tmp)
         else:
