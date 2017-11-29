@@ -52,8 +52,9 @@ class Node(object):
         self.tags = list(tags)
         self.envf = True
 
-    def copy(self):
-        return Node(self.tags, self.dims, self.data, self.envs)
+    @staticmethod
+    def copy(tensor):
+        return Node(tensor.tags, tensor.dims, tensor.data, tensor.envs)
 
     def replace(self, other):
         """Replace itself with another node.
