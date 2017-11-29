@@ -79,6 +79,12 @@ class Node(object):
             ans *= np.reshape(np.power(tensor.envs[i], pows), tmp)
         return ans
 
+    def delete_envs(self):
+        self.data = Node.absorb_envs(self, 1)
+        self.envs = []
+        for i in dims:
+            self.envs.append(np.ones(i))
+
     def transpose(self, tags):
         self.data = np.transpose(self.data, [self.tags.index(i) for i in tags])
         tmp = self.dims
