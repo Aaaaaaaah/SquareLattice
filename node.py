@@ -2,7 +2,7 @@
 
 import numpy as np
 
-class Node:
+class Node(object):
 
     def __init__(self, tags, dims, data=None, envs=None):
         assert len(tags) == len(dims)
@@ -38,14 +38,14 @@ class Node:
             self.tags[self.tags.index(i)] = j
 
     @staticmethod
-    def absorb_envs(self, pow, legs=None):
-        ans = self.data.copy()
-        if legs == None:
-            legs = range(len(self.dims))
+    def absorb_envs(tensor, pows, legs=None):
+        ans = tensor.data.copy()
+        if legs is None:
+            legs = range(len(tensor.dims))
         for i in legs:
-            tmp = np.ones(len(self.dims), dtype=int)
-            tmp[i] = self.dims[i]
-            ans *= np.reshape(np.power(self.envs[i], pow), tmp)
+            tmp = np.ones(len(tensor.dims), dtype=int)
+            tmp[i] = tensor.dims[i]
+            ans *= np.reshape(np.power(tensor.envs[i], pows), tmp)
         return ans
 
     def transpose(self, tags):
@@ -60,7 +60,11 @@ class Node:
         return "Node with dims: %s"%str(zip(self.tags, self.dims))
 
     @staticmethod
-    def contract(T1, tags1, T2, tags2, tags_dict1=dict(), tags_dict2=dict()):
+    def contract(T1, tags1, T2, tags2, tags_dict1=None, tags_dict2=None):
+        if tags_dict1 is None:
+            tags_dict1 = {}
+        if tags_dict2 is None:
+            tags_dict2 = {}
         # order:the indexs of legs waiting for contracting
         order1 = [T1.tags.index(i) for i in tags1]
         order2 = [T2.tags.index(i) for i in tags2]
@@ -72,10 +76,14 @@ class Node:
             assert i in T1.tags and i not in tags1
         for i in tags_dict2:
             assert i in T2.tags and i not in tags2
-        tags = [j if j not in tags_dict1 else tags_dict1[j] for i, j in enumerate(T1.tags) if i not in order1] +\
-               [j if j not in tags_dict2 else tags_dict2[j] for i, j in enumerate(T2.tags) if i not in order2]
-        dims = [j for i, j in enumerate(T1.dims) if i not in order1] + [j for i, j in enumerate(T2.dims) if i not in order2]
-        envs = [j for i, j in enumerate(T1.envs) if i not in order1] + [j for i, j in enumerate(T2.envs) if i not in order2]
+        tags = [j if j not in tags_dict1 else tags_dict1[j] \
+                for i, j in enumerate(T1.tags) if i not in order1] +\
+               [j if j not in tags_dict2 else tags_dict2[j] \
+                for i, j in enumerate(T2.tags) if i not in order2]
+        dims = [j for i, j in enumerate(T1.dims) if i not in order1] +\
+                [j for i, j in enumerate(T2.dims) if i not in order2]
+        envs = [j for i, j in enumerate(T1.envs) if i not in order1] +\
+                [j for i, j in enumerate(T2.envs) if i not in order2]
         #initiate the answer
         T = Node(tags, dims, np.tensordot(TD1, TD2, [order1, order2]), envs)
         return T
@@ -127,4 +135,3 @@ class Node:
         TD2.transpose(T2.tags)
         T1.replace(TD1)
         T2.replace(TD2)
-
