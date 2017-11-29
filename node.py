@@ -149,7 +149,6 @@ class Node(object):
         l2 = T2.dims[T2.tags.index(phy2)]
         if cut is None:
             cut = T1.dims[T1.tags.index(tag1)]
-
         # 缩并
         TD = Node.contract(T1, [tag1], T2, [tag2],
                            {i:"__1.%s"%i for i in T1.tags if i is not tag1},
