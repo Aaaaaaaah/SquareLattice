@@ -17,27 +17,16 @@ def _node(s):
     return Node(list(s)+["p"],l)
 
 def node_in_lattice(i,j):
+    s = "udrl"
     if i == 0:
-        if j == 0:
-            return _node("dr")
-        elif j != L2-1:
-            return _node("ldr")
-        else:
-            return _node("ld")
-    elif i != L1:
-        if j == 0:
-            return _node("urd")
-        elif j != L2-1:
-            return _node("ulrd")
-        else:
-            return _node("uld")
-    else:
-        if j == 0:
-            return _node("ur")
-        elif j !=  L2-1:
-            return _node("ulr")
-        else:
-            return _node("ul")
+        s = s.replace("u","")
+    if i == L1-1:
+        s = s.replace("d","")
+    if j == 0:
+        s = s.replace("l","")
+    if j == L2-1:
+        s = s.replace("r","")
+    return _node(s)
 
 lattice = [[node_in_lattice(i,j) for j in range(L2)] for i in range(L1)]
 
@@ -62,4 +51,3 @@ for t in range(10):
         for i in range(1,L1-1,2):
             Node.update(lattice[i][j],lattice[i+1][j],"d","u","p","p",expH)
 
-print lattice[1][1].envs
