@@ -19,7 +19,7 @@ psi_new = [Node.copy(i) for i in psi0]
 
 ##right unitarinalize
 for i in range(L-1, 0, -1):
-    r = psi_new[i].qr(["l"])
+    psi_new[i].data , r = Node.qr(psi_new[i], ["l"])
     psi_new[i-1].matrix_multiply("r", r, 1)
 
 ##initiate side
@@ -34,13 +34,23 @@ for i in range(L-2, 0, -1):
     tmp = Node.contract(tmp, ["phyu", "up"], psi_new[i], ["phy", "r"])
     tmp.rename_leg({"l":"up"})
     side = [tmp] + side
-side = [None] + side
+side = [Node(["phy", "r"])] + side
 
 ##main part
 for _ in range(100):
     #from left to right
     for i in range(L-1):
-        pass
+        tmp = Node.contract(psi0[i], ["phy"], operator[i], ["phyd"])
+        tmp.rename_leg({"phyu":"phy"})i
+        if i is not 0 :
+            tmp = Node.contract(tmp, ["l", "ol"], side[i-1], ["mid", "down"])
+            tmp.rename_leg({"up":"l"})
+        side[i] = Node.copy(tmp)
+        tmp = Node(tmp, ["or", "r"], side[i+1], ["mid", "down"])
+        tmp.rename_leg({"up":"r"})
+        psi_new[i].data , r = Node.qr(tmp, ["r"])
+        side[i] = Node.contract(side[i], ["phyu", "l"], psi_new[i], ["phy", "l"])
+        side[i].rename_leg({"r":"up"})
     #from right to left
     for i in range(L-1, 0, -1):
         pass
