@@ -19,6 +19,7 @@ class Node(object):
         envf: if it is using environments, envf is True, else False
     """
 
+    # 初始化函数
     def __init__(self, tags, dims, data=None, envs=None, envf=True):
         """Initiate the Node
 
@@ -55,6 +56,10 @@ class Node(object):
         self.tags = list(tags)
         self.__envf = envf
 
+    def __repr__(self):
+        return "Node with dims: %s"%str(zip(self.tags, self.dims))
+
+    #复制与替代
     @staticmethod
     def copy(tensor):
         return Node(tensor.tags,
@@ -78,6 +83,7 @@ class Node(object):
         self.tags = other.tags
         self.__envf = other.__envf
 
+    #重命名脚,吸收环境等基本操作
     def rename_leg(self, tag_dict):
         """Rename the dimensions
 
@@ -130,6 +136,16 @@ class Node(object):
             self.data = Node.absorb_envs(self, 1)
             self.__envf = False
 
+    def matrix_multiply(self, tag, r, r_ind=0):
+        self.envf = False
+        tbak = list(self.tags)
+        ind = self.tags.index(tag)
+        del self.tags[ind]
+        self.tags.append(tag)
+        self.data = np.tensordot(self.data, r, ((ind), (r_ind)))
+        self.transpose(tbak)
+
+    #转置
     def transpose(self, tags):
         """Transpose the tensor data of the Node
 
@@ -143,46 +159,7 @@ class Node(object):
         self.envs = [tmp[self.tags.index(i)] for i in tags]
         self.tags = tags
 
-    def qr(self, tags):
-        """QR decomposition
-
-        Decompose self with QR decomposition and return r matrix.
-
-        Args:
-            tags: the dimension need to be decompose into r matrix
-
-        Returns:
-            q, r: the Q and R matrix of QR decomposition
-        """
-        self.delete_envs()
-        tbak = list(self.tags)
-        tagt = list(self.tags)
-        for i in tags:
-            del tagt[tagt.index(i)]
-        tagt += tags
-        self.transpose(tagt)
-        shape = [np.prod(self.dims[:-len(tags)]), self.dims[-len(tags):]]
-        q, r = np.linalg.qr(np.reshape(self.data, shape))
-        q = np.pad(q, ((0, 0), (0, shape[1]-q.shape[1])),
-                   'constant', constant_values=0)
-        r = np.pad(r, ((0, 0), (shape[1]-r.shape[0], 0)),
-                   'constant', constant_values=0)
-        q = np.reshape(q, self.dims)
-        self.transpose(tbak)
-        return q, r
-
-    def matrix_multiply(self, tag, r, r_ind=0):
-        self.envf = False
-        tbak = list(self.tags)
-        ind = self.tags.index(tag)
-        del self.tags[ind]
-        self.tags.append(tag)
-        self.data = np.tensordot(self.data, r, ((ind), (r_ind)))
-        self.transpose(tbak)
-
-    def __repr__(self):
-        return "Node with dims: %s"%str(zip(self.tags, self.dims))
-
+    #张量操作
     @staticmethod
     def contract(T1, tags1, T2, tags2, tags_dict1=None, tags_dict2=None):
         """Contract two Node together
@@ -273,6 +250,35 @@ class Node(object):
         T2.data = Node.absorb_envs(T2, -2, range(1, len(dims2)))
         return T1, T2
 
+    def qr(self, tags):
+        """QR decomposition
+
+        Decompose self with QR decomposition and return r matrix.
+
+        Args:
+            tags: the dimension need to be decompose into r matrix
+
+        Returns:
+            q, r: the Q and R matrix of QR decomposition
+        """
+        self.delete_envs()
+        tbak = list(self.tags)
+        tagt = list(self.tags)
+        for i in tags:
+            del tagt[tagt.index(i)]
+        tagt += tags
+        self.transpose(tagt)
+        shape = [np.prod(self.dims[:-len(tags)]), self.dims[-len(tags):]]
+        q, r = np.linalg.qr(np.reshape(self.data, shape))
+        q = np.pad(q, ((0, 0), (0, shape[1]-q.shape[1])),
+                   'constant', constant_values=0)
+        r = np.pad(r, ((0, 0), (shape[1]-r.shape[0], 0)),
+                   'constant', constant_values=0)
+        q = np.reshape(q, self.dims)
+        self.transpose(tbak)
+        return q, r
+
+    # simple update
     @staticmethod
     def update(T1, T2, tag1, tag2, phy1, phy2, H, cut=None):
         """Update two tensor with Hamiltonian
