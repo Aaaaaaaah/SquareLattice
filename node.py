@@ -211,7 +211,7 @@ class Node(object):
         return T
 
     @staticmethod
-    def svd(tensor, num, tag1, tag2, cut):
+    def svd(tensor, num, tag1, tag2, cut=None):
         """SVD decomposition of Node
 
         SVD decomposition of Node and update the environments between these two
@@ -252,7 +252,7 @@ class Node(object):
         return T1, T2
 
     @staticmethod
-    def qr(tensor, num, tag1, tag2, cut):
+    def qr(tensor, num, tag1, tag2, cut=None):
         """QR decomposition
 
         Decompose a Node with QR decomposition and return q, r matrix.

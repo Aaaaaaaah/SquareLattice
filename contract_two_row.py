@@ -5,6 +5,14 @@ L = 10
 d = 2
 D = 4
 
+def decompose_tool(func, T, tag, tag1, tag2):
+    tmp_tag = T.tags
+    tmp = tmp_tag.index(tag)
+    T.transpose(tmp_tag[:tmp] + tmp_tag[tmp+1:] + [tag])
+    q, r = func(T, len(T.tags)-1, tag1, tag2)
+    T.transpose(tmp_tag)
+    return q, r
+
 #from right to leftt
 #contract two rows into one row
 
@@ -19,8 +27,8 @@ psi_new = [Node.copy(i) for i in psi0]
 
 ##right unitarinalize
 for i in range(L-1, 0, -1):
-    psi_new[i].data , r = Node.qr(psi_new[i], ["l"])
-    psi_new[i-1].matrix_multiply("r", r, 1)
+    psi_new[i] , r = decompose_tool(Node.qr, psi_new[i], "l", "l", "r")
+    psi_new[i-1] = Node.contract(psi_new[i-1], ["r"], r, ["l"])
 
 ##initiate side
 tmp = Node.contract(operator[-1], ["phyd"], psi0[-1], ["phy"])
@@ -48,7 +56,7 @@ for _ in range(100):
         side[i] = Node.copy(tmp)
         tmp = Node(tmp, ["or", "r"], side[i+1], ["mid", "down"])
         tmp.rename_leg({"up":"r"})
-        psi_new[i].data , r = Node.qr(tmp, ["r"])
+        psi_new[i] , r = decompose_tool(Node.qr, tmp, "r", "r", "l")
         if i is not 0:
             side[i] = Node.contract(side[i], ["phy", "l"], psi_new[i], ["phy", "l"])
         else:
@@ -64,7 +72,7 @@ for _ in range(100):
         side[i] = Node.copy(tmp)
         tmp = Node(tmp, ["ol", "l"], side[i-1], ["mid", "down"])
         tmp.rename_leg({"up":"l"})
-        psi_new[i].data , r = Node.qr(tmp, ["l"])
+        psi_new[i] , r = decompose_tool(Node.qr, tmp, "l", "l", "r")
         if i is not 0:
             side[i] = Node.contract(side[i], ["phy", "r"], psi_new[i], ["phy", "r"])
         else:
