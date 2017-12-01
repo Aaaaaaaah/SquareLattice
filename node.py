@@ -255,7 +255,7 @@ class Node(object):
     def qr(tensor, num, tag1, tag2, cut):
         """QR decomposition
 
-        Decompose a node with QR decomposition and return q, r matrix.
+        Decompose a Node with QR decomposition and return q, r matrix.
 
         Args:
             tensor: the Node wait to be decomposed.
@@ -266,7 +266,7 @@ class Node(object):
             cut: the rank remain
 
         Returns:
-            q, r: the Q and R matrix of QR decomposition
+            q, r: the Q and R matrix of QR decomposition in Node class format
         """
         order = 2 if tensor.envf else 1
         dims1 = tensor.dims[:num]
