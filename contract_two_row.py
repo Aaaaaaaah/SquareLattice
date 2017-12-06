@@ -20,7 +20,7 @@ def decompose_tool(func, T, tag, tag1, tag2):
 psi0 = [Node(["phy", "r"], [d, D])] +[Node(["l", "phy", "r"], [D, d, D]) for _ in range(L-2)] + [Node(["l", "phy"], [D, d])]
 
 ##generate Operator(left, up, down, right)
-Operator = [Node(["phyu", "phyd", "or"], [d, d, D])] + [Node(["ol", "phyu", "phyd", "or"], [D, d, d, D]) for _ in range(L-2)] + [Node(["ol", "phyu", "phyd"], [D, d, d])]
+operator = [Node(["phyu", "phyd", "or"], [d, d, D])] + [Node(["ol", "phyu", "phyd", "or"], [D, d, d, D]) for _ in range(L-2)] + [Node(["ol", "phyu", "phyd"], [D, d, d])]
 
 ##psi_new = psi0
 psi_new = [Node.copy(i) for i in psi0]
@@ -33,10 +33,10 @@ for i in range(L-1, 0, -1):
 ##initiate side
 tmp = Node.contract(operator[-1], ["phyd"], psi0[-1], ["phy"])
 tmp.rename_leg({"l":"down","ol":"mid"})
-side = [Node.contract(tmp, ["phyu"], psi_new[-1], ["d"])]
+side = [Node.contract(tmp, ["phyu"], psi_new[-1], ["phy"])]
 side[0].rename_leg({"l":"up"})
 for i in range(L-2, 0, -1):
-    tmp = Node.contract(operator[i], ["phyd"], psi_new, ["phy"])
+    tmp = Node.contract(operator[i], ["phyd"], psi0[i], ["phy"])
     tmp.rename_leg({"l":"down", "ol":"mid"})
     tmp = Node.contract(tmp, ["r", "or"], side[0], ["down", "mid"])
     tmp = Node.contract(tmp, ["phyu", "up"], psi_new[i], ["phy", "r"])
@@ -51,10 +51,11 @@ for _ in range(100):
         tmp = Node.contract(psi0[i], ["phy"], operator[i], ["phyd"])
         tmp.rename_leg({"phyu":"phy"})
         if i is not 0 :
-            tmp = Node.contract(tmp, ["l", "ol"], side[i-1], ["mid", "down"])
+            tmp = Node.contract(tmp, ["ol", "l"], side[i-1], ["mid", "down"])
             tmp.rename_leg({"up":"l"})
         side[i] = Node.copy(tmp)
-        tmp = Node(tmp, ["or", "r"], side[i+1], ["mid", "down"])
+        side[i].rename_leg({"r":"down", "or":"mid"})
+        tmp = Node.contract(tmp, ["or", "r"], side[i+1], ["mid", "down"])
         tmp.rename_leg({"up":"r"})
         psi_new[i] , r = decompose_tool(Node.qr, tmp, "r", "r", "l")
         if i is not 0:
@@ -67,16 +68,17 @@ for _ in range(100):
         tmp = Node.contract(psi0[i], ["phy"], operator[i], ["phyd"])
         tmp.rename_leg({"phyu":"phy"})
         if i is not L-1 :
-            tmp = Node.contract(tmp, ["r", "or"], side[i+1], ["mid", "down"])
+            tmp = Node.contract(tmp, ["or", "r"], side[i+1], ["mid", "down"])
             tmp.rename_leg({"up":"r"})
         side[i] = Node.copy(tmp)
-        tmp = Node(tmp, ["ol", "l"], side[i-1], ["mid", "down"])
+        side[i].rename_leg({"l":"down", "ol":"mid"})
+        tmp = Node.contract(tmp, ["ol", "l"], side[i-1], ["mid", "down"])
         tmp.rename_leg({"up":"l"})
         psi_new[i] , r = decompose_tool(Node.qr, tmp, "l", "l", "r")
-        if i is not 0:
+        if i is not L-1:
             side[i] = Node.contract(side[i], ["phy", "r"], psi_new[i], ["phy", "r"])
         else:
             side[i] = Node.contract(side[i], ["phy"], psi_new[i], ["phy"])
-        side[i].rename_leg({"r":"up"})
+        side[i].rename_leg({"l":"up"})
 
 ##compare ans
