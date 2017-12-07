@@ -45,7 +45,7 @@ for i in range(L-2, 0, -1):
 side = [Node(["up", "mid", "down"], [D, D, D])] + side
 
 ##main part
-for _ in range(100):
+for _ in range(1):
     #from left to right
     for i in range(L-1):
         tmp = Node.contract(psi0[i], ["phy"], operator[i], ["phyd"])
@@ -80,5 +80,33 @@ for _ in range(100):
         else:
             side[i] = Node.contract(side[i], ["phy"], psi_new[i], ["phy"])
         side[i].rename_leg({"l":"up"})
+tmp = Node.contract(psi0[0], ["phy"], operator[0], ["phyd"])
+tmp.rename_leg({"phyu":"phy"})
+tmp = Node.contract(tmp, ["or", "r"], side[1], ["mid", "down"])
+tmp.rename_leg({"up":"r"})
+psi_new[0] = Node.copy(tmp)
 
 ##compare ans
+for i in range(L):
+    if i==0:
+        ans1 = Node.contract(psi_new[i], ["phy"], psi_new[i], ["phy"], {"r":"up"}, {"r":"down"})
+    else:
+        ans1 = Node.contract(ans1, ["up"], psi_new[i], ["l"])
+        if i is not L-1:
+            ans1.rename_leg({"r":"up"})
+        ans1 = Node.contract(ans1, ["down", "phy"], psi_new[i], ["l", "phy"])
+        if i is not L-1:
+            ans1.rename_leg({"r":"down"})
+print(ans1.data)
+
+for i in range(L):
+    tmp = Node.contract(psi0[i], ["phy"], operator[i], ["phyu"])
+    if i==0:
+        ans2 = Node.contract(tmp, ["phyd"], tmp, ["phyd"], {"r":"1", "or":"2"}, {"r":"4","or":"3"})
+    elif i==L-1:
+        ans2 = Node.contract(ans2, ["1", "2"], tmp, ["l", "ol"])
+        ans2 = Node.contract(ans2, ["3", "4", "phyd"], tmp, ["ol", "l", "phyd"])
+    else:
+        ans2 = Node.contract(ans2, ["1", "2"], tmp, ["l", "ol"], {}, {"r":"1", "or":"2"})
+        ans2 = Node.contract(ans2, ["3", "4", "phyd"], tmp, ["ol", "l", "phyd"], {}, {"r":"4", "or":"3"})
+print(ans2.data)
