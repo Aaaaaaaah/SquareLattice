@@ -275,7 +275,7 @@ class Node(object):
             np.reshape(
                 Node.absorb_envs(tensor, order),
                 [np.prod(dims1), np.prod(dims2)]),
-            full_matrices=False
+            mode = 'reduced'
         )
         if cut is None:
             cut = data1.shape[1]
