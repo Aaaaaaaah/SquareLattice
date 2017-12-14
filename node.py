@@ -99,8 +99,9 @@ class Node(object):
             tag_dict: the dictionary of old tags and new tags
                 with format {old tags : new tags}
         """
-        for i, j in tag_dict.items():
-            self.tags[self.tags.index(i)] = j
+        tmp = [self.tags.index(i) for i in tag_dict]
+        for i in tmp:
+            self.tags[i] = tag_dict[self.tags[i]]
 
     @staticmethod
     def absorb_envs(tensor, pows, legs=None):
@@ -288,6 +289,10 @@ class Node(object):
                 [np.prod(dims1), np.prod(dims2)]),
             mode='reduced'
         )
+        if data2.shape[0]!=data2.shape[1]:
+            tmp1, tmp2 = data2.shape[0], data2.shape[1]
+            data1 = np.concatenate((data1, np.zeros([tmp1, tmp2-tmp1])), axis=1)
+            data2 = np.concatenate((data2, np.zeros([tmp2-tmp1, tmp2])), axis=0)
         if cut is None:
             cut = data1.shape[1]
         env = np.ones(cut)

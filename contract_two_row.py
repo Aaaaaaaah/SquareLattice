@@ -46,6 +46,8 @@ for i in range(L-2, 0, -1):
     side = [tmp] + side
 side = [Node(["up", "mid", "down"], [D, D, D])] + side
 
+r = Node(["l", "r"], [D, D], data=np.diag(np.ones([D])))
+
 ##main part
 for _ in range(1):
     #from left to right
@@ -61,7 +63,11 @@ for _ in range(1):
         tmp.rename_leg({"up":"r"})
         if i is not 0:
             tmp = Node.contract(tmp, ["l"], r, ["r"])
+        else:
+            tmp = Node.contract(tmp, ["r"], r, ["l"])
         psi_new[i] , r = decompose_tool(Node.qr, tmp, "r", "r", "l")
+        print(tmp.dims, psi_new[i].dims, r.dims)
+        r.rename_leg({"l":"r", "r":"l"})
         if i is not 0:
             side[i] = Node.contract(side[i], ["phy", "l"], psi_new[i], ["phy", "l"])
         else:
@@ -80,7 +86,10 @@ for _ in range(1):
         tmp.rename_leg({"up":"l"})
         if i is not L-1:
             tmp = Node.contract(tmp, ["r"], r, ["l"])
+        else:
+            tmp = Node.contract(tmp, ["l"], r, ["r"])
         psi_new[i] , r = decompose_tool(Node.qr, tmp, "l", "l", "r")
+        r.rename_leg({"l":"r", "r":"l"})
         if i is not L-1:
             side[i] = Node.contract(side[i], ["phy", "r"], psi_new[i], ["phy", "r"])
         else:
@@ -90,7 +99,8 @@ tmp = Node.contract(psi0[0], ["phy"], operator[0], ["phyd"])
 tmp.rename_leg({"phyu":"phy"})
 tmp = Node.contract(tmp, ["or", "r"], side[1], ["mid", "down"])
 tmp.rename_leg({"up":"r"})
-psi_new[0] = Node.copy(tmp)
+print(r.data)
+psi_new[0] = Node.contract(tmp, ["r"], r, ["l"])
 
 ##compare ans
 for i in range(L):
