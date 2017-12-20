@@ -1,3 +1,6 @@
+"""
+    Only a sketch to understand the technique to put two rows together
+"""
 import numpy as np
 from node import Node
 
