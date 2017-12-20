@@ -1,9 +1,10 @@
 import numpy as np
 from node import Node
 
-L = 10
+L = 20
 d = 2
-D = 4
+D1 = 4
+D2 = 8
 
 def decompose_tool(func, T, tag, tag1, tag2):
     tmp_tag = T.tags
@@ -17,15 +18,17 @@ def decompose_tool(func, T, tag, tag1, tag2):
 #contract two rows into one row
 
 ##generate psi0(left, up, right)
-psi0 = [Node(["phy", "r"], [d, D], normf=False)] \
-     + [Node(["l", "phy", "r"], [D, d, D], normf=False) for _ in range(L-2)] \
-     + [Node(["l", "phy"], [D, d], normf=False)]
+psi0 = [Node(["phy", "r"], [d, D1], normf=False)] \
+     + [Node(["l", "phy", "r"], [D1, d, D1], normf=False) for _ in range(L-2)] \
+     + [Node(["l", "phy"], [D1, d], normf=False)]
 
 ##generate Operator(left, up, down, right)
-operator = [Node(["phyu", "phyd", "or"], [d, d, D])] + [Node(["ol", "phyu", "phyd", "or"], [D, d, d, D]) for _ in range(L-2)] + [Node(["ol", "phyu", "phyd"], [D, d, d])]
+operator = [Node(["phyu", "phyd", "or"], [d, d, D1])] + [Node(["ol", "phyu", "phyd", "or"], [D1, d, d, D1]) for _ in range(L-2)] + [Node(["ol", "phyu", "phyd"], [D1, d, d])]
 
 ##psi_new = psi0
-psi_new = [Node.copy(i) for i in psi0]
+psi_new = [Node(["phy", "r"], [d, D2], normf=False)] \
+        + [Node(["l", "phy", "r"], [D2, d, D2], normf=False) for _ in range(L-2)] \
+        + [Node(["l", "phy"], [D2, d], normf=False)]
 
 ##right unitarinalize
 for i in range(L-1, 0, -1):
@@ -44,9 +47,7 @@ for i in range(L-2, 0, -1):
     tmp = Node.contract(tmp, ["phyu", "up"], psi_new[i], ["phy", "r"])
     tmp.rename_leg({"l":"up"})
     side = [tmp] + side
-side = [Node(["up", "mid", "down"], [D, D, D])] + side
-
-r = Node(["l", "r"], [D, D], data=np.diag(np.ones([D])))
+side = [Node(["up", "mid", "down"], [D2, D1, D1])] + side
 
 ##main part
 for _ in range(1):
@@ -61,13 +62,7 @@ for _ in range(1):
         side[i].rename_leg({"r":"down", "or":"mid"})
         tmp = Node.contract(tmp, ["or", "r"], side[i+1], ["mid", "down"])
         tmp.rename_leg({"up":"r"})
-        if i is not 0:
-            tmp = Node.contract(tmp, ["l"], r, ["r"])
-        else:
-            tmp = Node.contract(tmp, ["r"], r, ["l"])
         psi_new[i] , r = decompose_tool(Node.qr, tmp, "r", "r", "l")
-        print(tmp.dims, psi_new[i].dims, r.dims)
-        r.rename_leg({"l":"r", "r":"l"})
         if i is not 0:
             side[i] = Node.contract(side[i], ["phy", "l"], psi_new[i], ["phy", "l"])
         else:
@@ -84,12 +79,7 @@ for _ in range(1):
         side[i].rename_leg({"l":"down", "ol":"mid"})
         tmp = Node.contract(tmp, ["ol", "l"], side[i-1], ["mid", "down"])
         tmp.rename_leg({"up":"l"})
-        if i is not L-1:
-            tmp = Node.contract(tmp, ["r"], r, ["l"])
-        else:
-            tmp = Node.contract(tmp, ["l"], r, ["r"])
         psi_new[i] , r = decompose_tool(Node.qr, tmp, "l", "l", "r")
-        r.rename_leg({"l":"r", "r":"l"})
         if i is not L-1:
             side[i] = Node.contract(side[i], ["phy", "r"], psi_new[i], ["phy", "r"])
         else:
@@ -99,8 +89,7 @@ tmp = Node.contract(psi0[0], ["phy"], operator[0], ["phyd"])
 tmp.rename_leg({"phyu":"phy"})
 tmp = Node.contract(tmp, ["or", "r"], side[1], ["mid", "down"])
 tmp.rename_leg({"up":"r"})
-print(r.data)
-psi_new[0] = Node.contract(tmp, ["r"], r, ["l"])
+psi_new[0] = Node.copy(tmp)
 
 ##compare ans
 for i in range(L):
@@ -116,13 +105,13 @@ for i in range(L):
 print(ans1.data)
 
 for i in range(L):
-    tmp = Node.contract(psi0[i], ["phy"], operator[i], ["phyu"])
+    tmp = Node.contract(psi0[i], ["phy"], operator[i], ["phyd"])
     if i==0:
-        ans2 = Node.contract(tmp, ["phyd"], tmp, ["phyd"], {"r":"1", "or":"2"}, {"r":"4","or":"3"})
+        ans2 = Node.contract(tmp, ["phyu"], tmp, ["phyu"], {"r":"1", "or":"2"}, {"r":"4","or":"3"})
     elif i==L-1:
         ans2 = Node.contract(ans2, ["1", "2"], tmp, ["l", "ol"])
-        ans2 = Node.contract(ans2, ["3", "4", "phyd"], tmp, ["ol", "l", "phyd"])
+        ans2 = Node.contract(ans2, ["3", "4", "phyu"], tmp, ["ol", "l", "phyu"])
     else:
         ans2 = Node.contract(ans2, ["1", "2"], tmp, ["l", "ol"], {}, {"r":"1", "or":"2"})
-        ans2 = Node.contract(ans2, ["3", "4", "phyd"], tmp, ["ol", "l", "phyd"], {}, {"r":"4", "or":"3"})
+        ans2 = Node.contract(ans2, ["3", "4", "phyu"], tmp, ["ol", "l", "phyu"], {}, {"r":"4", "or":"3"})
 print(ans2.data)

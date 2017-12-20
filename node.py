@@ -289,10 +289,10 @@ class Node(object):
                 [np.prod(dims1), np.prod(dims2)]),
             mode='reduced'
         )
-        if data2.shape[0]!=data2.shape[1]:
-            tmp1, tmp2 = data2.shape[0], data2.shape[1]
-            data1 = np.concatenate((data1, np.zeros([tmp1, tmp2-tmp1])), axis=1)
-            data2 = np.concatenate((data2, np.zeros([tmp2-tmp1, tmp2])), axis=0)
+        ##if data2.shape[0]!=data2.shape[1]:
+        ##    tmp1, tmp2 = data2.shape[0], data2.shape[1]
+        ##    data1 = np.concatenate((data1, np.zeros([tmp1, tmp2-tmp1])), axis=1)
+        ##    data2 = np.concatenate((data2, np.zeros([tmp2-tmp1, tmp2])), axis=0)
         if cut is None:
             cut = data1.shape[1]
         env = np.ones(cut)
