@@ -67,8 +67,45 @@ for t in range(10):
 
 print(latt[1][1].envs)
 
+
+
+
+
+
+
+
+
+
+
+def decompose_tool(func, T, tag, tag1, tag2):
+    tmp_tag = T.tags
+    tmp = tmp_tag.index(tag)
+    T.transpose(tmp_tag[:tmp] + tmp_tag[tmp+1:] + [tag])
+    q, r = func(T, len(T.tags)-1, tag1, tag2)
+    T.transpose(tmp_tag)
+    return q,r
+
+def unitarilize(node_list, target_tag, counter_tag):
+    for i in range(len(node_list)-1):
+        node_list[i] , r = \
+            decompose_tool(Node.qr, node_list[i], target_tag, target_tag, counter_tag)
+        node_list[i+1] = \
+            Node.contract(node_list[i+1], [counter_tag], r, [target_tag])
+
 ##generate 4 directions approximate lines
 #from "l" to "r"
 sub_l = lattice(node_approx, L1, L2-1, "udrr")
+for i in range(L1):
+    for j in range(L2):
+        latt[i][j].normf = False
 
+for j in range(L2-1):
+    ##down unitarilization
+    tmp = []
+    for i in range(L1):
+        tmp = Node.copy(sub_l[i][j]) + tmp
+    unitarilize(tmp, "d", "u")
+    for i in range(L1):
+        sub_l[i][j].replace(tmp[L1-i-1])
+    ##
 
