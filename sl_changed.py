@@ -107,5 +107,17 @@ for j in range(L2-1):
     unitarilize(tmp, "d", "u")
     for i in range(L1):
         sub_l[i][j].replace(tmp[L1-i-1])
-    ##
+    ##generate "side"
+    side = []
+    for i in range(L1-1, 0, -1):
+        tmp = Node.contract(latt[i][j], ["r"], sub_l[i][j], ["r_up"], \
+                            {"u":"up","d":"coun_up", "r":"r_up"}, {"u":"new","d":"coun_down"})
+        tmp = Node.contract(tmp, ["r_down", "p"], latt[i][j], ["r", "p"], \
+                            {}, {"u":"down", "d":"coun_down", "l":"l'"})
+    ##generate approximate sub_l
+    i = 0
+    step = 1
+    for _ in range(2 * L1 - 1):
+        pass
+
 
