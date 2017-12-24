@@ -328,3 +328,38 @@ class Node(object):
         TD2.transpose(T2.tags)
         T1.replace(TD1)
         T2.replace(TD2)
+
+    @staticmethod
+    def qr_update(T1, T2, tag1, tag2, phy1, phy2, H, cut=None):
+        """Update two tensor with Hamiltonian
+
+        update in Simple Update method
+
+        Args:
+            T1, T2: tensor wait to be update
+            phy1, phy2: the physical dimension of T1, T2
+            tag1, tag2: the dimension wait to be contracted
+            H: Hamiltonian
+            cut: the number of singularvalue remain
+        """
+        # 准备
+        l1 = T1.dims[T1.tags.index(phy1)]
+        l2 = T2.dims[T2.tags.index(phy2)]
+        if cut is None:
+            cut = T1.dims[T1.tags.index(tag1)]
+        # 缩并
+        TD = Node.contract(T1, [tag1], T2, [tag2],
+                           {i:"__1.%s"%i for i in T1.tags if i is not tag1},
+                           {i:"__2.%s"%i for i in T2.tags if i is not tag2})
+        tmp = TD.tags
+        HH = Node(["__1", "__2", "__1.%s"%phy1, "__2.%s"%phy2], [l1, l2, l1, l2], H)
+        TD = Node.contract(TD, ["__1.%s"%phy1, "__2.%s"%phy2], HH, ["__1", "__2"])
+        TD.transpose(tmp)
+        # SVD
+        TD1, TD2 = Node.svd(TD, len(T1.tags)-1, tag1, tag2, cut)
+        TD1.rename_leg({"__1.%s"%i:i for i in T1.tags if i is not tag1})
+        TD2.rename_leg({"__2.%s"%i:i for i in T2.tags if i is not tag2})
+        TD1.transpose(T1.tags)
+        TD2.transpose(T2.tags)
+        T1.replace(TD1)
+        T2.replace(TD2)
