@@ -17,10 +17,11 @@ class Node(object):
         data: the tensor data of the node.
         envs: the environments of each dimension
         envf: if it is using environments, envf is True, else False
+        normf: if it is using autonormalization, normf is True, else False
     """
 
     # 初始化函数
-    def __init__(self, tags, dims, data=None, envs=None, envf=True):
+    def __init__(self, tags, dims, data=None, envs=None, envf=True, normf=True):
         """Initiate the Node
 
         Give the Node a tensor data and each dim environments.
@@ -37,7 +38,8 @@ class Node(object):
         assert len(set(tags)) == len(tags)
         if data is not None:
             self.data = np.reshape(np.array(data, dtype=np.float64), dims)
-            self.data /= np.max(np.abs(self.data))
+            if normf:
+                self.data /= np.max(np.abs(self.data))
         else:
             self.data = np.random.random(dims)
         if envs is not None:
@@ -47,7 +49,8 @@ class Node(object):
                     self.envs.append(np.ones(i))
                 else:
                     tmp = np.array(j, dtype=np.float64)
-                    tmp /= np.max(np.abs(tmp))
+                    if normf:
+                        tmp /= np.max(np.abs(tmp))
                     assert tmp.shape == (i,)
                     self.envs.append(tmp)
         else:
@@ -55,6 +58,7 @@ class Node(object):
         self.dims = list(dims)
         self.tags = list(tags)
         self.__envf = envf
+        self.__normf = normf
 
     def __repr__(self):
         return "Node with dims: %s"%str(zip(self.tags, self.dims))
@@ -66,7 +70,8 @@ class Node(object):
                     tensor.dims,
                     tensor.data,
                     tensor.envs,
-                    tensor.__envf)
+                    tensor.__envf,
+                    tensor.__normf)
 
     def replace(self, other):
         """Replace itself with another node.
@@ -82,6 +87,7 @@ class Node(object):
         self.dims = other.dims
         self.tags = other.tags
         self.__envf = other.__envf
+        self.__normf = other.__normf
 
     #重命名脚,吸收环境等基本操作
     def rename_leg(self, tag_dict):
@@ -93,8 +99,9 @@ class Node(object):
             tag_dict: the dictionary of old tags and new tags
                 with format {old tags : new tags}
         """
-        for i, j in tag_dict.items():
-            self.tags[self.tags.index(i)] = j
+        tmp = [self.tags.index(i) for i in tag_dict]
+        for i in tmp:
+            self.tags[i] = tag_dict[self.tags[i]]
 
     @staticmethod
     def absorb_envs(tensor, pows, legs=None):
@@ -126,6 +133,10 @@ class Node(object):
     @property
     def envf(self):
         return self.__envf
+
+    @property
+    def normf(self):
+        return self.__normf
 
     @envf.setter
     def envf(self, value):
@@ -205,13 +216,14 @@ class Node(object):
         envs = [j for i, j in enumerate(T1.envs) if i not in order1] +\
                 [j for i, j in enumerate(T2.envs) if i not in order2]
         #initiate the answer
-        T = Node(tags, dims, np.tensordot(TD1, TD2, [order1, order2]), envs)
+        T = Node(tags, dims, np.tensordot(TD1, TD2, [order1, order2]), envs,
+                 normf=T1.normf & T2.normf)
         T1.envf = envf1
         T2.envf = envf2
         return T
 
     @staticmethod
-    def svd(tensor, num, tag1, tag2, cut):
+    def svd(tensor, num, tag1, tag2, cut=None):
         """SVD decomposition of Node
 
         SVD decomposition of Node and update the environments between these two
@@ -252,10 +264,10 @@ class Node(object):
         return T1, T2
 
     @staticmethod
-    def qr(tensor, num, tag1, tag2, cut):
+    def qr(tensor, num, tag1, tag2, cut=None):
         """QR decomposition
 
-        Decompose a node with QR decomposition and return q, r matrix.
+        Decompose a Node with QR decomposition and return q, r matrix.
 
         Args:
             tensor: the Node wait to be decomposed.
@@ -266,7 +278,7 @@ class Node(object):
             cut: the rank remain
 
         Returns:
-            q, r: the Q and R matrix of QR decomposition
+            q, r: the Q and R matrix of QR decomposition in Node class format
         """
         order = 2 if tensor.envf else 1
         dims1 = tensor.dims[:num]
@@ -275,8 +287,12 @@ class Node(object):
             np.reshape(
                 Node.absorb_envs(tensor, order),
                 [np.prod(dims1), np.prod(dims2)]),
-            full_matrices=False
+            mode='reduced'
         )
+        ##if data2.shape[0]!=data2.shape[1]:
+        ##    tmp1, tmp2 = data2.shape[0], data2.shape[1]
+        ##    data1 = np.concatenate((data1, np.zeros([tmp1, tmp2-tmp1])), axis=1)
+        ##    data2 = np.concatenate((data2, np.zeros([tmp2-tmp1, tmp2])), axis=0)
         if cut is None:
             cut = data1.shape[1]
         env = np.ones(cut)
@@ -288,7 +304,8 @@ class Node(object):
         dims2 = [cut] + dims2
         envs1 = tensor.envs[:num] + [env]
         envs2 = [env] + tensor.envs[num:]
-        T1, T2 = Node(tags1, dims1, data1, envs1, True), Node(tags2, dims2, data2, envs2, True)
+        T1, T2 = Node(tags1, dims1, data1, envs1, True, tensor.normf), \
+                 Node(tags2, dims2, data2, envs2, True, tensor.normf)
         T1.data = Node.absorb_envs(T1, -order, range(len(dims1)-1))
         T2.data = Node.absorb_envs(T2, -order, range(1, len(dims2)))
         return T1, T2
