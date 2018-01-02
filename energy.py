@@ -10,8 +10,7 @@ from node import Node
 from tool import decompose_tool, very_simple_contract, unitarilize
 
 #hat
-hat[0] = Node(["phy"], [2], data=np.array([1,0]))
-hat[1] = Node(["phy"], [2], data=np.array([0,1]))
+hat = [Node(["phy"], [2], data=np.array([1,0])), Node(["phy"], [2], data=np.array([0,1]))]
 
 class square_lattice(object):
     """
@@ -57,7 +56,7 @@ class square_lattice(object):
         dir_dict = {1:right, -1:left}
         pos = 0
         energy1 = very_simple_contract([[i.copy().rename_leg({up:down}) for i in psi_new], \
-                                        psi_new, 2, L, up, down, left, right)
+                                        psi_new], 2, L, up, down, left, right)
         while (abs(energy1-energy0)<energy0*delta):
             in_range = (pos-dir) in range(L)
             if in_range:
@@ -74,5 +73,5 @@ class square_lattice(object):
             if pos in [0, L-1]:
                 dir = -dir
             energy1 = very_simple_contract([[i.copy().rename_leg({up:down}) for i in psi_new], \
-                                            psi_new, 2, L, up, down, left, right)
+                                            psi_new], 2, L, up, down, left, right)
         return psi_new
