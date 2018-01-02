@@ -30,8 +30,9 @@ class square_lattice(object):
             psi0: left, up, right
             operator: left, up, down, right
         """
+        delta = 1e-6
         L = len(psi0)
-        ##disable the normf
+        ##disable normf
         for i in psi0 + operator:
             i.normf = False
         ##unitarilize
@@ -47,11 +48,17 @@ class square_lattice(object):
             tmp = Node.contract(tmp, ["up", up], psi_new[i], [right, up], {}, {left:"up"})
             side = [tmp] + side
         side = [None] + side
+        ##target energy
+        tmp = [[i.copy().rename_leg({up:down}) for i in psi0], \
+               [i.copy().rename_leg({up:down, down:up}) for i in operator], operator, psi0]
+        energy0 = very_simple_contract(tmp, 4, L, up, down, left, right)
         ##main part
         dir = 1
         dir_dict = {1:right, -1:left}
         pos = 0
-        while (flag):
+        energy1 = very_simple_contract([[i.copy().rename_leg({up:down}) for i in psi_new], \
+                                        psi_new, 2, L, up, down, left, right)
+        while (abs(energy1-energy0)<energy0*delta):
             in_range = (pos-dir) in range(L)
             if in_range:
                 tmp = Node.contract(side[pos-dir], ["down"], psi0[pos], [dir_dict[-dir]], {}, {right:"down"})
@@ -66,3 +73,6 @@ class square_lattice(object):
             pos += dir
             if pos in [0, L-1]:
                 dir = -dir
+            energy1 = very_simple_contract([[i.copy().rename_leg({up:down}) for i in psi_new], \
+                                            psi_new, 2, L, up, down, left, right)
+        return psi_new
