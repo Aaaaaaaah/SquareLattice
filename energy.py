@@ -9,67 +9,60 @@ import numpy as np
 from node import Node
 from tool import decompose_tool, very_simple_contract, unitarilize
 
+#hat
+hat[0] = Node(["phy"], [2], data=np.array([1,0]))
+hat[1] = Node(["phy"], [2], data=np.array([0,1]))
+
 class square_lattice(object):
     """
         tensor_array
         lattice_type
+        redu_tensor redutensor[i][j][0 or 1]
     """
-    def __init__(self, arr, rows, cols):
-        o
+    def __init__(self, arr, rows, cols, H):
         self.tensor_array = [i.copy() for i in arr]
+        self.redu_tensor = [[[Node.contract(j,["phy"],hat[k], ["phy"]) \
+                              for k in range(2)] for j in i] for i in arr]
+        self.Hamilton = H.copy()
 
-##initiate side
-tmp = Node.contract(operator[-1], ["phyd"], psi0[-1], ["phy"])
-tmp.rename_leg({"l":"down","ol":"mid"})
-side = [Node.contract(tmp, ["phyu"], psi_new[-1], ["phy"])]
-side[0].rename_leg({"l":"up"})
-for i in range(L-2, 0, -1):
-    tmp = Node.contract(operator[i], ["phyd"], psi0[i], ["phy"])
-    tmp.rename_leg({"l":"down", "ol":"mid"})
-    tmp = Node.contract(tmp, ["r", "or"], side[0], ["down", "mid"])
-    tmp = Node.contract(tmp, ["phyu", "up"], psi_new[i], ["phy", "r"])
-    tmp.rename_leg({"l":"up"})
-    side = [tmp] + side
-side = [Node(["up", "mid", "down"], [D2, D1, D1])] + side
-
-##main part
-for _ in range(1):
-    #from left to right
-    for i in range(L-1):
-        tmp = Node.contract(psi0[i], ["phy"], operator[i], ["phyd"])
-        tmp.rename_leg({"phyu":"phy"})
-        if i is not 0 :
-            tmp = Node.contract(tmp, ["ol", "l"], side[i-1], ["mid", "down"])
-            tmp.rename_leg({"up":"l"})
-        side[i] = Node.copy(tmp)
-        side[i].rename_leg({"r":"down", "or":"mid"})
-        tmp = Node.contract(tmp, ["or", "r"], side[i+1], ["mid", "down"])
-        tmp.rename_leg({"up":"r"})
-        psi_new[i] , r = decompose_tool(Node.qr, tmp, "r", "r", "l")
-        if i is not 0:
-            side[i] = Node.contract(side[i], ["phy", "l"], psi_new[i], ["phy", "l"])
-        else:
-            side[i] = Node.contract(side[i], ["phy"], psi_new[i], ["phy"])
-        side[i].rename_leg({"r":"up"})
-    #from right to left
-    for i in range(L-1, 0, -1):
-        tmp = Node.contract(psi0[i], ["phy"], operator[i], ["phyd"])
-        tmp.rename_leg({"phyu":"phy"})
-        if i is not L-1 :
-            tmp = Node.contract(tmp, ["or", "r"], side[i+1], ["mid", "down"])
-            tmp.rename_leg({"up":"r"})
-        side[i] = Node.copy(tmp)
-        side[i].rename_leg({"l":"down", "ol":"mid"})
-        tmp = Node.contract(tmp, ["ol", "l"], side[i-1], ["mid", "down"])
-        tmp.rename_leg({"up":"l"})
-        psi_new[i] , r = decompose_tool(Node.qr, tmp, "l", "l", "r")
-        if i is not L-1:
-            side[i] = Node.contract(side[i], ["phy", "r"], psi_new[i], ["phy", "r"])
-        else:
-            side[i] = Node.contract(side[i], ["phy"], psi_new[i], ["phy"])
-        side[i].rename_leg({"l":"up"})
-tmp = Node.contract(psi0[0], ["phy"], operator[0], ["phyd"])
-tmp.rename_leg({"phyu":"phy"})
-tmp = Node.contract(tmp, ["or", "r"], side[1], ["mid", "down"])
-tmp.rename_leg({"up":"r"})
-psi_new[0] = Node.copy(tmp)
+    def contract_two_row(psi0, operator, left="l", up="u", down="d", right="r"):
+        """
+            psi0: left, up, right
+            operator: left, up, down, right
+        """
+        L = len(psi0)
+        ##disable the normf
+        for i in psi0 + operator:
+            i.normf = False
+        ##unitarilize
+        psi_new = [i.copy() for i in psi0]
+        unitarilize(psi_new, right, left)
+        ##initiate side
+        tmp = Node.contract(psi0[L-1], [up], operator[L-1], [down], {left:"down"}, {left:"mid"})
+        tmp = Node.contract(tmp, [up], psi_new[L-1], [up], {}, {left:"up"})
+        side = [tmp]
+        for i in range(L-2, 0, -1):
+            tmp = Node.contract(tmp, ["down"], psi0[i], [right], {}, {left:"down"})
+            tmp = Node.contract(tmp, ["mid", up], operator[i], [right, down], {}, {left:"mid"})
+            tmp = Node.contract(tmp, ["up", up], psi_new[i], [right, up], {}, {left:"up"})
+            side = [tmp] + side
+        side = [None] + side
+        ##main part
+        dir = 1
+        dir_dict = {1:right, -1:left}
+        pos = 0
+        while (flag):
+            in_range = (pos-dir) in range(L)
+            if in_range:
+                tmp = Node.contract(side[pos-dir], ["down"], psi0[pos], [dir_dict[-dir]], {}, {right:"down"})
+                tmp = Node.contract(tmp, ["mid", up], operator[pos], [dir_dict[-dir], down], {}, {right:"mid"})
+            else:
+                tmp = Node.contract(Node([],[]), [], psi0[pos], [], {right:"down"})
+                tmp = Node.contract(tmp, [up], operator[pos], [down], {}, {right:"mid"})
+            psi_new[pos] = Node.contract(tmp, ["mid", "down"], side, ["mid", "down"], {"up":dir_dict[-dir]} \
+                                if in_range else {}, {"up":dir_dict[dir]})
+            side[pos] = Node.contract(tmp, ["up", up] if in_range else [up], psi_new, \
+                                      [dir_dict[-dir], up] if in_range else [up], {}, {dir_dict[dir]:"up"})
+            pos += dir
+            if pos in [0, L-1]:
+                dir = -dir

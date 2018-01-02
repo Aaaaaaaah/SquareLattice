@@ -147,6 +147,12 @@ class Node(object):
             self.data = Node.absorb_envs(self, 1)
             self.__envf = False
 
+    @normf.setter
+    def normf(self, value):
+        if value:
+            self.data /= np.max(np.abs(self.data))
+        self.__normf = value
+
     def matrix_multiply(self, tag, r, r_ind=0):
         self.envf = False
         tbak = list(self.tags)
