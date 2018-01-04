@@ -35,7 +35,6 @@ def very_simple_contract(sq_latt, n, m, u="u", d="d", l="l", r="r"):
                 dict2 = {}
             else:
                 dict2 = {r:str(i)}
-            print(ans.tags, sq_latt[i][j].tags, tag1, tag2)
             ans = Node.contract(ans, tag1, sq_latt[i][j], tag2, {}, dict2)
     return ans.data.copy()
 

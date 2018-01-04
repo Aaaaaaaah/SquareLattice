@@ -57,18 +57,21 @@ class square_lattice(object):
         pos = 0
         energy1 = very_simple_contract([[Node.copy(i).rename_leg({up:down}) for i in psi_new], \
                                         psi_new], 2, L, up, down, left, right)
-        while (abs(energy1-energy0)<energy0*delta):
-            print(pos)
+        print(energy0)
+        while (abs(energy1-energy0)>abs(energy0)*delta):
+            print(pos, energy1)
             in_range = (pos-dir) in range(L)
             if in_range:
-                tmp = Node.contract(side[pos-dir], ["down"], psi0[pos], [dir_dict[-dir]], {}, {right:"down"})
-                tmp = Node.contract(tmp, ["mid", up], operator[pos], [dir_dict[-dir], down], {}, {right:"mid"})
+                tmp = Node.contract(side[pos-dir], ["down"], psi0[pos], [dir_dict[-dir]], {}, {dir_dict[dir]:"down"})
+                tmp = Node.contract(tmp, ["mid", up], operator[pos], [dir_dict[-dir], down], {}, {dir_dict[dir]:"mid"})
             else:
-                tmp = Node.contract(Node([],[]), [], psi0[pos], [], {right:"down"})
-                tmp = Node.contract(tmp, [up], operator[pos], [down], {}, {right:"mid"})
-            psi_new[pos] = Node.contract(tmp, ["mid", "down"], side, ["mid", "down"], {"up":dir_dict[-dir]} \
+                tmp = Node.copy(psi0[pos]).rename_leg({dir_dict[dir]:"down"})
+                tmp = Node.contract(tmp, [up], operator[pos], [down], {}, {dir_dict[dir]:"mid"})
+            psi_new[pos] = Node.contract(tmp, ["mid", "down"], side[pos+dir], ["mid", "down"], {"up":dir_dict[-dir]} \
                                 if in_range else {}, {"up":dir_dict[dir]})
-            side[pos] = Node.contract(tmp, ["up", up] if in_range else [up], psi_new, \
+            psi_new[pos],r = decompose_tool(Node.qr, psi_new[pos], dir_dict[dir], dir_dict[dir], dir_dict[-dir])
+            psi_new[pos+dir] = Node.contract(r, [dir_dict[dir]], psi_new[pos+dir], [dir_dict[-dir]])
+            side[pos] = Node.contract(tmp, ["up", up] if in_range else [up], psi_new[pos], \
                                       [dir_dict[-dir], up] if in_range else [up], {}, {dir_dict[dir]:"up"})
             pos += dir
             if pos in [0, L-1]:
