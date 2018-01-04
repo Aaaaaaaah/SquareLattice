@@ -102,6 +102,7 @@ class Node(object):
         tmp = [self.tags.index(i) for i in tag_dict]
         for i in tmp:
             self.tags[i] = tag_dict[self.tags[i]]
+        return self
 
     @staticmethod
     def absorb_envs(tensor, pows, legs=None):

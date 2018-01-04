@@ -19,7 +19,7 @@ class square_lattice(object):
         redu_tensor redutensor[i][j][0 or 1]
     """
     def __init__(self, arr, rows, cols, H):
-        self.tensor_array = [i.copy() for i in arr]
+        self.tensor_array = [[Node.copy(j) for j in i] for i in arr]
         self.redu_tensor = [[[Node.contract(j,["phy"],hat[k], ["phy"]) \
                               for k in range(2)] for j in i] for i in arr]
         self.Hamilton = H.copy()
@@ -35,8 +35,8 @@ class square_lattice(object):
         for i in psi0 + operator:
             i.normf = False
         ##unitarilize
-        psi_new = [i.copy() for i in psi0]
-        unitarilize(psi_new, right, left)
+        psi_new = [Node.copy(i) for i in psi0]
+        unitarilize(psi_new, left, right)
         ##initiate side
         tmp = Node.contract(psi0[L-1], [up], operator[L-1], [down], {left:"down"}, {left:"mid"})
         tmp = Node.contract(tmp, [up], psi_new[L-1], [up], {}, {left:"up"})
@@ -48,16 +48,17 @@ class square_lattice(object):
             side = [tmp] + side
         side = [None] + side
         ##target energy
-        tmp = [[i.copy().rename_leg({up:down}) for i in psi0], \
-               [i.copy().rename_leg({up:down, down:up}) for i in operator], operator, psi0]
+        tmp = [[Node.copy(i).rename_leg({up:down}) for i in psi0], \
+               [Node.copy(i).rename_leg({up:down, down:up}) for i in operator], operator, psi0]
         energy0 = very_simple_contract(tmp, 4, L, up, down, left, right)
         ##main part
         dir = 1
         dir_dict = {1:right, -1:left}
         pos = 0
-        energy1 = very_simple_contract([[i.copy().rename_leg({up:down}) for i in psi_new], \
+        energy1 = very_simple_contract([[Node.copy(i).rename_leg({up:down}) for i in psi_new], \
                                         psi_new], 2, L, up, down, left, right)
         while (abs(energy1-energy0)<energy0*delta):
+            print(pos)
             in_range = (pos-dir) in range(L)
             if in_range:
                 tmp = Node.contract(side[pos-dir], ["down"], psi0[pos], [dir_dict[-dir]], {}, {right:"down"})
@@ -72,6 +73,6 @@ class square_lattice(object):
             pos += dir
             if pos in [0, L-1]:
                 dir = -dir
-            energy1 = very_simple_contract([[i.copy().rename_leg({up:down}) for i in psi_new], \
+            energy1 = very_simple_contract([[Node.copy(i).rename_leg({up:down}) for i in psi_new], \
                                             psi_new], 2, L, up, down, left, right)
         return psi_new
