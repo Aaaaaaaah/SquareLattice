@@ -32,7 +32,7 @@ class square_lattice(object):
             psi0: left, up, right
             operator: left, up, down, right
         """
-        delta = 1e-6
+        delta = 5e-4
         L = len(psi0)
         ##disable normf
         for i in psi0 + operator:

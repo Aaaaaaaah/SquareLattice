@@ -38,10 +38,10 @@ class Node(object):
         assert len(set(tags)) == len(tags)
         if data is not None:
             self.data = np.reshape(np.array(data, dtype=np.float64), dims)
-            if normf:
-                self.data /= np.max(np.abs(self.data))
         else:
             self.data = np.random.random(dims)
+        if normf:
+            self.data /= np.max(np.abs(self.data))
         if envs is not None:
             self.envs = []
             for i, j in zip(dims, envs):
@@ -224,8 +224,8 @@ class Node(object):
         envs = [j for i, j in enumerate(T1.envs) if i not in order1] +\
                 [j for i, j in enumerate(T2.envs) if i not in order2]
         #initiate the answer
-        T = Node(tags, dims, np.tensordot(TD1, TD2, [order1, order2]), envs,
-                 normf=T1.normf & T2.normf)
+        T = Node(tags, dims, np.tensordot(TD1, TD2, [order1, order2]), envs, \
+                 envf=T1.envf & T2.envf, normf=T1.normf & T2.normf)
         T1.envf = envf1
         T2.envf = envf2
         return T
