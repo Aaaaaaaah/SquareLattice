@@ -146,11 +146,12 @@ class Node(object):
             self.__envf = True
         if value is False and self.__envf is True:
             self.data = Node.absorb_envs(self, 1)
+            self.envs = [np.ones(self.dims[i]) for i in range(len(self.dims))]
             self.__envf = False
 
     @normf.setter
     def normf(self, value):
-        if value:
+        if value and not self.__normf:
             self.data /= np.max(np.abs(self.data))
         self.__normf = value
 

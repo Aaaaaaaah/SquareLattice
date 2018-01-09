@@ -20,8 +20,11 @@ class square_lattice(object):
     """
     def __init__(self, arr, rows, cols, H):
         self.tensor_array = [[Node.copy(j) for j in i] for i in arr]
+        for i in self.tensor_array:
+            for j in i:
+                j.envf = False
         self.redu_tensor = [[[Node.contract(j,["phy"],hat[k], ["phy"]) \
-                              for k in range(2)] for j in i] for i in arr]
+                    for k in range(2)] for j in i] for i in self.tensor_array]
         self.Hamilton = H.copy()
 
     def contract_two_row(psi0, operator, left="l", up="u", down="d", right="r"):
