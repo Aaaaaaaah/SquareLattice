@@ -18,15 +18,16 @@ class square_lattice(object):
         lattice_type
         redu_tensor redutensor[i][j][0 or 1]
     """
-    def __init__(self, arr, rows, cols, H):
+    def __init__(self, arr, phy, rows, cols, H):
         self.tensor_array = [[Node.copy(j) for j in i] for i in arr]
         for i in self.tensor_array:
             for j in i:
                 j.envf = False
-        self.redu_tensor = [[[Node.contract(j,["phy"],hat[k], ["phy"]) \
+        self.redu_tensor = [[[Node.contract(j, [phy], hat[k], ["phy"]) \
                     for k in range(2)] for j in i] for i in self.tensor_array]
         self.Hamilton = H.copy()
 
+    @staticmethod
     def contract_two_row(psi0, operator, left="l", up="u", down="d", right="r"):
         """
             psi0: left, up, right
@@ -82,3 +83,17 @@ class square_lattice(object):
             energy1 = very_simple_contract([[Node.copy(i).rename_leg({up:down}) for i in psi_new], \
                                             psi_new], 2, L, up, down, left, right)
         return psi_new
+
+    def calc_cnfig_weight(self, cnfig):
+        ##cnfig is a 01 matrix
+        #a better abbreviation for configuration, rather than cnfig, is required
+        #if cnfig has been calculated, return that answer
+        #wait to complete
+        n = len(cnfig)
+        m = len(cnfig[0])
+        ans = [self.redu_tensor[-1][i][cnfig[-1][i]] for i in range(m)]
+        for i in range(n-2,0,-1):
+            print(i)
+            ans = square_lattice.contract_two_row(ans, [self.redu_tensor[i][j][cnfig[i][j]] for j in range(m)])
+        ans = very_simple_contract([[self.redu_tensor[0][i][cnfig[0][i]] for i in range(m)],ans], 2, m)
+        return ans
