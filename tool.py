@@ -45,3 +45,11 @@ def unitarilize(node_list, target_tag, counter_tag):
         node_list[i-1] = \
             Node.contract(node_list[i-1], [counter_tag], r, [target_tag])
 
+def attempt_step(spins):
+    n = len(spins)
+    m = len(spins[0])
+    new_n = random.randint(n)
+    new_m = random.randint(m)
+    new_spins = [[j.copy() for j in i]for i in spins]
+    new_spins[new_n][new_m] = 1 - new_spins[new_n][new_m]
+    return new_spins
