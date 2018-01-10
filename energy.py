@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-    polished from contract_two_rows.py
     try to support the energy calculation of square lattice
 """
 
 import numpy as np
 from node import Node
 from tool import decompose_tool, very_simple_contract, unitarilize
+from cnfig import cnfig
 
 #hat
 hat = [Node(["phy"], [2], data=np.array([1,0])), Node(["phy"], [2], data=np.array([0,1]))]
@@ -89,11 +89,18 @@ class square_lattice(object):
         #a better abbreviation for configuration, rather than cnfig, is required
         #if cnfig has been calculated, return that answer
         #wait to complete
-        n = len(cnfig)
-        m = len(cnfig[0])
-        ans = [self.redu_tensor[-1][i][cnfig[-1][i]] for i in range(m)]
-        for i in range(n-2,0,-1):
+        ans = [self.redu_tensor[-1][i][cnfig.spins[-1][i]] for i in range(cnfig.cols)]
+        for i in range(cnfig.rows-2,0,-1):
             print(i)
-            ans = square_lattice.contract_two_row(ans, [self.redu_tensor[i][j][cnfig[i][j]] for j in range(m)])
-        ans = very_simple_contract([[self.redu_tensor[0][i][cnfig[0][i]] for i in range(m)],ans], 2, m)
+            ans = square_lattice.contract_two_row(ans, [self.redu_tensor[i][j][cnfig.spins[i][j]] for j in range(cnfig.cols)])
+        ans = very_simple_contract([[self.redu_tensor[0][i][cnfig.spins[0][i]] for i in range(cnfig.cols)],ans], 2, m)
         return ans
+
+    def calc_cnfig_energy(self, cnfig):
+        return ans
+
+    def sampling_energy(self):
+        preheat_time = 100000
+        sampling_time = 10000
+        for _ in range(preheat_time):
+            pass
