@@ -18,6 +18,8 @@ class square_lattice(object):
         redu_tensor redutensor[i][j][0 or 1]
     """
     def __init__(self, arr, phy, rows, cols, H, spins=None):
+        self.n = rows
+        self.m = cols
         self.tensor_array = [[Node.copy(j) for j in i] for i in arr]
         for i in self.tensor_array:
             for j in i:
@@ -87,7 +89,7 @@ class square_lattice(object):
                                             psi_new], 2, L, up, down, left, right)
         return psi_new
 
-    def calc_cnfig_weight(self, cnfig):
+    def calc_cnfig_weight(self, cnfig=None):
         """
             !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             cnfig is a 01 matrix
@@ -95,31 +97,57 @@ class square_lattice(object):
             if cnfig has been calculated, return that answer
             wait to complete
         """
+        if cnfig==None:
+            cnfig = self.spins
         n = len(cnfig)
         m = len(cnfig[0])
         ans = [self.redu_tensor[-1][i][cnfig[-1][i]] for i in range(m)]
         for i in range(n-2,0,-1):
-            print(i)
+            #print(i)
             ans = square_lattice.contract_two_row(ans, [self.redu_tensor[i][j][cnfig[i][j]] for j in range(m)])
         ans = very_simple_contract([[self.redu_tensor[0][i][cnfig[0][i]] for i in range(m)],ans], 2, m)
+        return ans[0]
+
+    def calc_cnfig_energy(self, cnfig=None):
+        if cnfig==None:
+            cnfig = self.spins
+        aux_s = [[0 for _ in range(self.m)] for _ in range(self.n)]
+        w0 = self.calc_energy()
+        i = 0
+        ans = 0
+        E = 0
+        for i in range(self.n):
+            for j in range(self.m):
+                if (i+1) in range(n):
+                    E += H[2*cnfig[i][j]+cnfig[i+1][j]][2*aux_s[i][j]+aux_s[i+1][j]]
+                if (j+1) in range(m):
+                    E += H[2*cnfig[i][j]+cnfig[i][j+1]][2*aux_s[i][j]+aux_s[i][j+1]]
+        while True:
+            w1 = self.calc_cnfig_weight(aux_s)
+            ans += E * w1 / w0
+            i += 1
+            pos = 0
+            tmp = i
+            while tmp % 2 == 0:
+                tmp = tmp >> 1
+                pos += 1
+            x = pos // self.m
+            y = pos % self.m
+            if x not in range(self.n):
+                break
+            for k in range(4):
+                dx = (k % 2) * (2 - k)
+                dy = ((k+1) % 2) * (1 - k)
+                if (x + dx in range(self.n)) and (y + dy in range(self.m)):
+                    E += H[2*cnfig[x][y]+cnfig[x+dx][y+dy]][2*(1-tmp)+aux_s[x+dx][y+dy]] \
+                         - H[2*cnfig[x][y]+cnfig[x+dx][y+dy]][2*tmp+aux_s[x+dx][y+dy]]
+            aux_s[x][y] = 1 - tmp
         return ans
-
-    def calc_weight(self):
-        return self.calc_cnfig_weight(self.spins)
-
-    def calc_cnfig_energy(self, cnfig):
-        ans = 1
-        return ans
-
-    def calc_energy(self):
-        return self.calc_cnfig_energy(self.cnfig)
 
     def evolve(self):
         new_spins = attempt_step(self.spins)
-        w1 = self.calc_weight().tolist()
-        w2 = self.calc_cnfig_weight(new_spins).tolist()
-        w1 = w1[0] ** 2
-        w2 = w2[0] ** 2
+        w1 = self.calc_cnfig_weight() ** 2
+        w2 = self.calc_cnfig_weight(new_spins) ** 2
         p = min(1, w2 / w1)
         if np.random.rand()<p:
             self.spins = new_spins
@@ -132,5 +160,5 @@ class square_lattice(object):
         ans = 0
         for _ in range(sampling_time):
             self.evolve()
-            ans += self.calc_energy() / sampling_time
+            ans += self.calc_cnfig_energy() / sampling_time
         return ans
