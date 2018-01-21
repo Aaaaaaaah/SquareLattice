@@ -53,3 +53,11 @@ def attempt_step(spins):
     new_spins = [[j for j in i] for i in spins]
     new_spins[new_n][new_m] = 1 - new_spins[new_n][new_m]
     return new_spins
+
+def to_bin(spins):
+    ans = 0;
+    for i in sum(spins, []):
+        ans += i
+        ans = ans << 1
+    ans = ans >> 1
+    return ans
