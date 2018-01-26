@@ -36,8 +36,8 @@ H = np.reshape([[0.25,0,0,0],[0,-0.25,0.5,0],[0,0.5,-0.25,0],[0,0,0,0.25]],[2,2,
 I = np.reshape(np.identity(4),[2,2,2,2])
 expH = I - 4.*ep*H
 
-for t in range(10):
-    print(t)
+for t in range(30):
+    #print(t)
     for i in range(0,L1):
         for j in range(0,L2-1,2):
             Node.update(lattice[i][j],lattice[i][j+1],"r","l","p","p",expH)
