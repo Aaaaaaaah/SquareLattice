@@ -69,9 +69,9 @@ class square_lattice(object):
         pos = 0
         energy1 = very_simple_contract([[Node.copy(i).rename_leg({up:down}) for i in psi_new], \
                                         psi_new], 2, L, up, down, left, right)
-        print(energy0)
+        #print(energy0)
         while (abs(energy1-energy0)>abs(energy0)*delta):
-            print(pos, energy1)
+            #print(pos, energy1)
             in_range = (pos-dir) in range(L)
             if in_range:
                 tmp = Node.contract(side[pos-dir], ["down"], psi0[pos], [dir_dict[-dir]], {}, {dir_dict[dir]:"down"})
@@ -93,8 +93,8 @@ class square_lattice(object):
             if abs(energy1-energy_tmp)<abs(energy1)*delta_err :
                 break
             energy1 = energy_tmp
-        print(energy1)
-        print()
+        #print(energy1)
+        #print()
         return psi_new
 
     def calc_cnfig_weight(self, cnfig=None):
@@ -117,6 +117,7 @@ class square_lattice(object):
             ans = square_lattice.contract_two_row(ans, [self.redu_tensor[i][j][cnfig[i][j]] for j in range(m)])
         ans = very_simple_contract([[self.redu_tensor[0][i][cnfig[0][i]] for i in range(m)],ans], 2, m).tolist()
         self.memory[to_bin(cnfig)] = ans
+        print("saving: ", to_bin(cnfig))
         return ans
 
     def calc_cnfig_energy(self, cnfig=None):
@@ -165,12 +166,14 @@ class square_lattice(object):
             self.spins = new_spins
 
     def preheat(self, preheat_time):
-        for _ in range(preheat_time):
+        for i in range(preheat_time):
+            print("preheat:", i)
             self.evolve()
 
     def sampling(self, sampling_time):
         ans = 0
-        for _ in range(sampling_time):
+        for i in range(sampling_time):
+            print("sampling:", i)
             self.evolve()
             ans += self.calc_cnfig_energy() / sampling_time
         return ans
