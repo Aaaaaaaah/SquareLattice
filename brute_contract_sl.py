@@ -2,7 +2,7 @@ import numpy as np
 from node import Node
 import sl
 
-tmp = Node([], [], normf=False)
+tmp = Node([], [], data = [1], normf=False)
 for i,x in enumerate(sl.lattice):
     for j,y in enumerate(x):
         for k in ["u","d","r","l","p"]:
@@ -25,8 +25,8 @@ norm = Node.contract(tmp, ["p%s%s" % (str(i),str(j)) for j in range(4) for i in 
                      , tmp, ["p%s%s" % (str(i),str(j)) for j in range(4) for i in range(4)])
 print("norm = ", norm.data)
 
-H = Node(["d1","d2","u1","u2"], [2,2,2,2], np.array(sl.H))
-E = np.array([1.0])
+H = Node(["d1","d2","u1","u2"], [2,2,2,2], np.array(sl.H), normf=False)
+E = np.array([0.0])
 for i in range(4):
     for j in range(3):
         tmp2 = Node.contract(tmp, ["p%s%s"%(str(i),str(j)), "p%s%s"%(str(i),str(j+1))], H, ["d1","d2"], {}, \
