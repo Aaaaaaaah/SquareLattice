@@ -5,7 +5,7 @@ from node import Node
 
 L1 = 4
 L2 = 4
-D = 4
+D = 8
 
 #   u
 # l   r
@@ -36,8 +36,8 @@ H = np.reshape([[0.25,0,0,0],[0,-0.25,0.5,0],[0,0.5,-0.25,0],[0,0,0,0.25]],[2,2,
 I = np.reshape(np.identity(4),[2,2,2,2])
 expH = I - 4.*ep*H
 
-for t in range(2000):
-    #print(t)
+for t in range(500):
+    print(t)
     if t in [100,200,400,800,1300]:
         if t == 100:
             ep = 0.05
