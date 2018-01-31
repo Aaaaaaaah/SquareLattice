@@ -10,7 +10,7 @@ from tool import decompose_tool, very_simple_contract, unitarilize, \
                  attempt_step, to_bin
 
 #hat
-hat = [Node(["phy"], [2], data=np.array([1,0])), Node(["phy"], [2], data=np.array([0,1]))]
+hat = [Node(["phy"], [2], data=np.array([1.0,0.0])), Node(["phy"], [2], data=np.array([0.0,1.0]))]
 
 class square_lattice(object):
     """
@@ -25,6 +25,7 @@ class square_lattice(object):
         for i in self.tensor_array:
             for j in i:
                 j.envf = False
+                j.normf = False
         self.redu_tensor = [[[Node.contract(j, [phy], hat[k], ["phy"]) \
                 for k in range(2)] for j in i] for i in self.tensor_array]
         self.H = H.copy()
@@ -71,7 +72,7 @@ class square_lattice(object):
                                         psi_new], 2, L, up, down, left, right)
         #print(energy0)
         while (abs(energy1-energy0)>abs(energy0)*delta):
-            #print(pos, energy1)
+            print(pos, energy1)
             in_range = (pos-dir) in range(L)
             if in_range:
                 tmp = Node.contract(side[pos-dir], ["down"], psi0[pos], [dir_dict[-dir]], {}, {dir_dict[dir]:"down"})
@@ -125,7 +126,6 @@ class square_lattice(object):
             cnfig = self.spins
         aux_s = [[0 for _ in range(self.m)] for _ in range(self.n)]
         w0 = self.calc_cnfig_weight()
-        i = 0
         ans = 0
         E = 0
         for i in range(self.n):
@@ -134,9 +134,11 @@ class square_lattice(object):
                     E += self.H[cnfig[i][j]][cnfig[i+1][j]][aux_s[i][j]][aux_s[i+1][j]]
                 if (j+1) in range(self.m):
                     E += self.H[cnfig[i][j]][cnfig[i][j+1]][aux_s[i][j]][aux_s[i][j+1]]
+        i = 0
         while True:
             w1 = self.calc_cnfig_weight(aux_s)
             ans += E * w1 / w0
+            print(aux_s, E, w0, w1, ans)
             i += 1
             pos = 0
             tmp = i
@@ -168,6 +170,7 @@ class square_lattice(object):
     def preheat(self, preheat_time):
         for i in range(preheat_time):
             print("preheat:", i)
+            print("spins now is:", self.spins)
             self.evolve()
 
     def sampling(self, sampling_time):
@@ -175,5 +178,6 @@ class square_lattice(object):
         for i in range(sampling_time):
             print("sampling:", i)
             self.evolve()
-            ans += self.calc_cnfig_energy() / sampling_time
-        return ans
+            ans += self.calc_cnfig_energy()
+            print("Now energy is:", ans / (i+1) / 16)
+        return ans / sampling_time / 16

@@ -55,7 +55,7 @@ def attempt_step(spins):
     return new_spins
 
 def to_bin(spins):
-    ans = 0;
+    ans = 0
     for i in sum(spins, []):
         ans += i
         ans = ans << 1
