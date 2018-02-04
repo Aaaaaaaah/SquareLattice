@@ -4,8 +4,11 @@ This module include class Node
 """
 
 import numpy as np
+import tensorflow as tf
 
-class Node(object):
+import node
+
+class J1Node(node.Node):
     """Node of the lattice
 
     Represent one node in the whole network and support necessary
@@ -21,88 +24,27 @@ class Node(object):
     """
 
     # 初始化函数
-    def __init__(self, tags, dims, data=None, envs=None, envf=True, normf=True):
-        """Initiate the Node
-
-        Give the Node a tensor data and each dim environments.
-        If data is not given by user, data would be randomly given.
-        If environments are not given, environments would be set as 1.
-
-        Args:
-            tags: the name of each dimension
-            dims: the order of each dimension
-            data: the tensor data of the node.
-            envs: the environments of each dimension
-        """
-        assert len(tags) == len(dims)
-        assert len(set(tags)) == len(tags)
-        if data is not None:
-            self.data = np.reshape(np.array(data, dtype=np.float64), dims)
-        else:
-            self.data = np.random.random(dims)
-        if normf:
-            self.data /= np.max(np.abs(self.data))
-        if envs is not None:
-            self.envs = []
-            for i, j in zip(dims, envs):
+    def __init__(self, tags, dims, data=None, envs=None):
+        super(J1Node, self).__init__(tags, dims, data)
+        if envs is None:
+            envs = [None for _ in tags]
+        self.envs = []
+        for i, j in zip(dims, envs):
+            if node.BASE == "NP":
                 if j is None:
-                    self.envs.append(np.ones(i))
+                    tmp = np.ones(i)
                 else:
-                    tmp = np.array(j, dtype=np.float64)
-                    if normf:
-                        tmp /= np.max(np.abs(tmp))
+                    tmp = np.array(j, dtype=np.float32)
                     assert tmp.shape == (i,)
-                    self.envs.append(tmp)
-        else:
-            self.envs = [np.ones(i) for i in dims]
-        self.dims = list(dims)
-        self.tags = list(tags)
-        self.__envf = envf
-        self.__normf = normf
-
-    def __repr__(self):
-        return "Node with dims: %s"%str(zip(self.tags, self.dims))
-
-    #复制与替代
-    @staticmethod
-    def copy(tensor):
-        return Node(tensor.tags,
-                    tensor.dims,
-                    tensor.data,
-                    tensor.envs,
-                    tensor.__envf,
-                    tensor.__normf)
-
-    def replace(self, other):
-        """Replace itself with another node.
-
-        A copy method, copy all attributes from the other node
-        into this node.
-
-        Args:
-            other: another node object
-        """
-        self.data = other.data
-        self.envs = other.envs
-        self.dims = other.dims
-        self.tags = other.tags
-        self.__envf = other.__envf
-        self.__normf = other.__normf
-
-    #重命名脚,吸收环境等基本操作
-    def rename_leg(self, tag_dict):
-        """Rename the dimensions
-
-        Give the dimensions some other names.
-
-        Args:
-            tag_dict: the dictionary of old tags and new tags
-                with format {old tags : new tags}
-        """
-        tmp = [self.tags.index(i) for i in tag_dict]
-        for i in tmp:
-            self.tags[i] = tag_dict[self.tags[i]]
-        return self
+            elif node.BASE == "TF":
+                if j is None:
+                    tmp = tf.ones(i)
+                else:
+                    tmp = tf.cast(j, dtype=tf.float32)
+                    assert tmp.shape == (i,)
+            else:
+                raise Exception("FT is TODO")
+            self.envs.append(tmp)
 
     @staticmethod
     def absorb_envs(tensor, pows, legs=None):

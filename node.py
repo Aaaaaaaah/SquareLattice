@@ -41,7 +41,7 @@ class Node(object):
         if init_data:
             if BASE == "NP":
                 if data:
-                    self.data = np.reshape(np.array(data, np.float64), self.dims)
+                    self.data = np.reshape(np.array(data, np.float32), self.dims)
                 else:
                     self.data = np.random.random(self.dims)
             elif BASE == "TF":
@@ -54,16 +54,6 @@ class Node(object):
 
     def __repr__(self):
         return "Node with dims: %s"%str(zip(self.tags, self.dims))
-
-    #复制与替代
-    @staticmethod
-    def copy(tensor):
-        return Node(
-            tensor.tags,
-            tensor.dims,
-            tensor.data
-        )
-    # 这个是有内存级data复制的
 
     #重命名脚,吸收环境等基本操作
     def rename_leg(self, tag_dict):
@@ -83,24 +73,8 @@ class Node(object):
     #运算
 
     #转置
-    def transpose(self, tags):
-        """Transpose the tensor data of the Node
-
-        Args:
-            tags: new arrangement of the old dimension names
-        """
-        if BASE == "NP":
-            self.data = np.transpose(self.data, [self.tags.index(i) for i in tags])
-        elif BASE == "TF":
-            self.data = tf.transpose(self.data, [self.tags.index(i) for i in tags])
-        else:
-            raise Exception("FT is TODO")
-        tmp = self.dims
-        self.dims = [tmp[self.tags.index(i)] for i in tags]
-        self.tags = tags
-
     @staticmethod
-    def transpose(tensor,tags):
+    def transpose(tensor, tags):
         """Transpose the tensor data of the Node
 
         Args:
@@ -160,9 +134,9 @@ class Node(object):
             data = tf.tensordot(tensor1.data, tensor2.data, [order1, order2])
         else:
             raise Exception("FT is TODO")
-        T = Node(tags, dims, None, False)
-        T.data = data
-        return T
+        result = Node(tags, dims, None, False)
+        result.data = data
+        return result
 
     @staticmethod
     def svd(tensor, tags, tag1, tag2, cut=None):
@@ -190,24 +164,47 @@ class Node(object):
         tensor_transposed = Node.transpose(tensor, tags)
         dims1 = tensor_transposed.dims[:num]
         dims2 = tensor_transposed.dims[num:]
-        data1, env, data2 = np.linalg.svd(
-            np.reshape(
-                tensor_transposed.data,
-                [np.prod(dims1), np.prod(dims2)])
-        )
-        if cut:
+        if BASE == "NP":
+            data1, env, data2 = np.linalg.svd(
+                np.reshape(
+                    tensor_transposed.data,
+                    [np.prod(dims1), np.prod(dims2)])
+            )
+            if not cut:
+                cut = len(env)
             env = env[:cut]
             data1 = data1[:, :cut]
+            tags1 = tensor_transposed.tags[:num] + [tag1]
+            dims1 = dims1 + [cut]
+            data1 = np.reshape(data1, dims1)
             data2 = data2[:cut, :]
+            tags2 = [tag2] + tensor_transposed.tags[num:]
+            dims2 = [cut] + dims2
+            data2 = np.reshape(data2, dims2)
+        elif BASE == "TF":
+            env, data1, data2 = tf.svd(
+                np.reshape(
+                    tensor_transposed.data,
+                    [np.prod(dims1), np.prod(dims2)])
+            )
+            if not cut:
+                cut = len(env)
+            env = env[:cut]
+            data1 = data1[:, :cut]
+            tags1 = tensor_transposed.tags[:num] + [tag1]
+            dims1 = dims1 + [cut]
+            data1 = tf.reshape(data1, dims1)
+            data2 = data2[:, :cut]
+            tags2 = tensor_transposed.tags[num:] + [tag2]
+            dims2 = dims2 + [cut]
+            data2 = tf.reshape(data2, dims2)
         else:
-            cut = len(env)
-        tags1 = tensor_transposed.tags[:num] + [tag1]
-        tags2 = [tag2] + tensor_transposed.tags[num:]
-        dims1 = dims1 + [cut]
-        dims2 = [cut] + dims2
-        T1 = Node(tags1, dims1, data1)
-        T2 = Node(tags2, dims2, data2)
-        return T1, env, T2
+            raise Exception("FT is TODO")
+        tensor1 = Node(tags1, dims1, None, False)
+        tensor1.data = data1
+        tensor2 = Node(tags2, dims2, None, False)
+        tensor2.data = data2
+        return tensor1, env, tensor2
 
     @staticmethod
     def qr(tensor, tags, tag1, tag2, cut=None):
@@ -234,20 +231,42 @@ class Node(object):
         tensor_transposed = Node.transpose(tensor, tags)
         dims1 = tensor_transposed.dims[:num]
         dims2 = tensor_transposed.dims[num:]
-        data1, data2 = np.linalg.qr(
-            np.reshape(
-                tensor_transposed.data,
-                [np.prod(dims1), np.prod(dims2)])
-        )
-        if cut:
+        if BASE == "NP":
+            data1, data2 = np.linalg.qr(
+                np.reshape(
+                    tensor_transposed.data,
+                    [np.prod(dims1), np.prod(dims2)])
+            )
+            if not cut:
+                cut = len(data2)
             data1 = data1[:, :cut]
+            tags1 = tensor_transposed.tags[:num] + [tag1]
+            dims1 = dims1 + [cut]
+            data1 = np.reshape(data1, dims1)
             data2 = data2[:cut, :]
+            tags2 = [tag2] + tensor_transposed.tags[num:]
+            dims2 = [cut] + dims2
+            data2 = np.reshape(data2, dims2)
+        elif BASE == "TF":
+            data1, data2 = tf.qr(
+                np.reshape(
+                    tensor_transposed.data,
+                    [np.prod(dims1), np.prod(dims2)])
+            )
+            if not cut:
+                cut = data1.shape[1]
+            data1 = data1[:, :cut]
+            tags1 = tensor_transposed.tags[:num] + [tag1]
+            dims1 = dims1 + [cut]
+            data1 = tf.reshape(data1, dims1)
+            data2 = data2[:, :cut]
+            tags2 = tensor_transposed.tags[num:] + [tag2]
+            dims2 = dims2 + [cut]
+            data2 = tf.reshape(data2, dims2)
         else:
-            cut = len(data2)
-        tags1 = tensor_transposed.tags[:num] + [tag1]
-        tags2 = [tag2] + tensor_transposed.tags[num:]
-        dims1 = dims1 + [cut]
-        dims2 = [cut] + dims2
-        T1 = Node(tags1, dims1, data1)
-        T2 = Node(tags2, dims2, data2)
-        return T1, T2
+            raise Exception("FT is TODO")
+        tensor1 = Node(tags1, dims1, None, False)
+        tensor1.data = data1
+        tensor2 = Node(tags2, dims2, None, False)
+        tensor2.data = data2
+        return tensor1, tensor2
