@@ -165,7 +165,7 @@ class Node(object):
         tensor1.data = np.reshape(data1, dims1)
         tensor2 = cls(tags2, dims2, None, False)
         tensor2.data = np.reshape(data2, dims2)
-        return tensor1, env, tensor2
+        return tensor1, env, tensor2, tensor_transposed, num
 
     @classmethod
     def qr(cls, tensor, tags, tag1, tag2, cut=None):
