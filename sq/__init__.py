@@ -1,4 +1,3 @@
-from . import node
-from . import lattice
-from .node import *
-from .lattice import *
+from .node import Node
+from .simple_update import SimpleNode
+from .lattice import Lattice
