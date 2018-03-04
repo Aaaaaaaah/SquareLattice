@@ -102,11 +102,11 @@ class Node(object):
 
         # generate the contribute of the answer
         tags = [j if j not in tags_dict1 else tags_dict1[j] \
-                for i, j in enumerate(tensor1.tags) if i not in order1] +\
+                for j in tensor1.tags if j not in tags1] +\
                [j if j not in tags_dict2 else tags_dict2[j] \
-                for i, j in enumerate(tensor2.tags) if i not in order2]
-        dims = [j for i, j in enumerate(tensor1.dims) if i not in order1] +\
-                [j for i, j in enumerate(tensor2.dims) if i not in order2]
+                for j in tensor2.tags if j not in tags2]
+        dims = [j for j in tensor1.dims if j not in tags1] +\
+                [j for j in tensor2.dims if j not in tags2]
 
         #initiate the answer
         data = np.tensordot(tensor1.data, tensor2.data, [order1, order2])
