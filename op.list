@@ -1,6 +1,0 @@
-max(abs(x))                    idamax
-matmul(x,y) -> tensordot       dgemm + transpose
-svd(x)                         esay but cut?
-random()                       easy
-transpose(x,t) -> transpose    ...
-copy()                         dcopy

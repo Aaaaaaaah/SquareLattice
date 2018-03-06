@@ -1,6 +1,12 @@
 import numpy as np
 
 class Node(object):
+    def normize(self):
+        self.data /= np.max(np.abs(self.data))
+        for i in self.envs:
+            if i is None:
+                continue
+            i /= np.max(np.abs(i))
 
     @staticmethod
     def check_dims(dims):

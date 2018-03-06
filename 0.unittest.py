@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from sq import *
+from SquareLattice import *
 
 class TestNode(unittest.TestCase):
     def test_init(self):
