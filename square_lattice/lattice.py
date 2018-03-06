@@ -7,8 +7,8 @@ class Lattice(object):
     def __init__(self, rows, cols, data=None, bound_cond=True):
         pass
 
-    def update(times):
+    def update(self,times):
         pass
 
-    def energy():
+    def energy(self):
         pass

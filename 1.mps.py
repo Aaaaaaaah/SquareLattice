@@ -1,5 +1,5 @@
 import numpy as np
-from SquareLattice import *
+from square_lattice import *
 
 D = 2
 

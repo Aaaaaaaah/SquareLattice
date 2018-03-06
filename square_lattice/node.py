@@ -32,7 +32,7 @@ class Node(object):
 
     def __init__(self, tags, dims, data=None, init_data=True):
         self.dims = self.check_dims(dims)
-        self.tags = self.check_tags(tags,len(self.dims))
+        self.tags = self.check_tags(tags, len(self.dims))
 
         if init_data:
             if data is not None:
@@ -114,8 +114,8 @@ class Node(object):
                 for j in tensor1.tags if j not in tags1] +\
                [j if j not in tags_dict2 else tags_dict2[j] \
                 for j in tensor2.tags if j not in tags2]
-        dims = [j for i, j in zip(tensor1.tags,tensor1.dims) if i not in tags1] +\
-                [j for i, j in zip(tensor2.tags,tensor2.dims) if i not in tags2]
+        dims = [j for i, j in zip(tensor1.tags, tensor1.dims) if i not in tags1] +\
+                [j for i, j in zip(tensor2.tags, tensor2.dims) if i not in tags2]
 
         #initiate the answer
         data = np.tensordot(tensor1.data, tensor2.data, [order1, order2])

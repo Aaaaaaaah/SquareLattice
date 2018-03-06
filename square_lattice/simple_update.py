@@ -107,6 +107,7 @@ class SimpleNode(Node):
         new_tensor1, new_tensor2, _, _ = cls.svd(ans_tensor, len(tensor1.tags)-1, tag1, tag2, cut)
         new_tensor1.rename_leg({"__1.%s"%i:i for i in tensor1.tags if i is not tag1})
         new_tensor2.rename_leg({"__2.%s"%i:i for i in tensor2.tags if i is not tag2})
+
         ans_tensor1 = cls.transpose(new_tensor1, tensor1.tags)
         ans_tensor2 = cls.transpose(new_tensor2, tensor2.tags)
         tensor1.data = ans_tensor1.data
