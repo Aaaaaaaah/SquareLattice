@@ -155,7 +155,8 @@ class Node(object):
             cut = len(env)
         else:
             assert isinstance(cut, int), "cut dim should be int"
-            assert cut <= len(env), "cut dim should be less than total dim"
+            if cut > len(env):
+                cut = len(env)
 
         env = env[:cut]
 
