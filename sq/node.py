@@ -26,7 +26,7 @@ class Node(object):
 
     def __init__(self, tags, dims, data=None, init_data=True):
         self.dims = self.check_dims(dims)
-        self.tags = self.check_dims(tags, len(self.dims))
+        self.tags = self.check_tags(tags,len(self.dims))
 
         if init_data:
             if data:
@@ -43,14 +43,15 @@ class Node(object):
     def copy_shape(cls, tensor):
         return cls(tensor.tags, tensor.dims, data=None, init_data=False)
 
-    def reshape(self, tags, dims=None):
+    def reshape(self, tags, dims):
+        assert np.prod(dims) == np.prod(self.dims), "total data should not be changed"
         self.dims = self.check_dims(dims)
-        self.tags = self.check_dims(tags, len(self.dims))
-        if self.data:
+        self.tags = self.check_tags(tags, len(self.dims))
+        if self.data is not None:
             self.data = np.reshape(self.data, self.dims)
 
     def __repr__(self):
-        return "Node with dims: %s"%str(zip(self.tags, self.dims))
+        return "Node with dims: %s"%str(list(zip(self.tags, self.dims)))
 
     def rename_leg(self, new_tags):
         if isinstance(new_tags, list):
@@ -105,8 +106,8 @@ class Node(object):
                 for j in tensor1.tags if j not in tags1] +\
                [j if j not in tags_dict2 else tags_dict2[j] \
                 for j in tensor2.tags if j not in tags2]
-        dims = [j for j in tensor1.dims if j not in tags1] +\
-                [j for j in tensor2.dims if j not in tags2]
+        dims = [j for i, j in zip(tensor1.tags,tensor1.dims) if i not in tags1] +\
+                [j for i, j in zip(tensor2.tags,tensor2.dims) if i not in tags2]
 
         #initiate the answer
         data = np.tensordot(tensor1.data, tensor2.data, [order1, order2])
@@ -118,8 +119,6 @@ class Node(object):
     def svd(cls, tensor, tags, tag1, tag2, cut=None):
         assert isinstance(tag1, str), "tag should be str"
         assert isinstance(tag2, str), "tag should be str"
-        assert tag1 not in tensor.tags, "duplicated tags"
-        assert tag2 not in tensor.tags, "duplicated tags"
 
         if isinstance(tags, list):
             for i in tags:
@@ -151,6 +150,9 @@ class Node(object):
 
         env = env[:cut]
 
+        assert tag1 not in tensor_transposed.tags[:num], "duplicated tags"
+        assert tag2 not in tensor_transposed.tags[num:], "duplicated tags"
+
         data1 = data1[:, :cut]
         tags1 = tensor_transposed.tags[:num] + [tag1]
         dims1 = dims1 + [cut]
@@ -171,8 +173,6 @@ class Node(object):
     def qr(cls, tensor, tags, tag1, tag2, cut=None):
         assert isinstance(tag1, str), "tag should be str"
         assert isinstance(tag2, str), "tag should be str"
-        assert tag1 not in tensor.tags, "duplicated tags"
-        assert tag2 not in tensor.tags, "duplicated tags"
 
         if isinstance(tags, list):
             for i in tags:
@@ -201,6 +201,9 @@ class Node(object):
         else:
             assert isinstance(cut, int), "cut dim should be int"
             assert cut <= data1.shape[1], "cut dim should be less than total dim"
+
+        assert tag1 not in tensor_transposed.tags[:num], "duplicated tags"
+        assert tag2 not in tensor_transposed.tags[num:], "duplicated tags"
 
         data1 = data1[:, :cut]
         tags1 = tensor_transposed.tags[:num] + [tag1]

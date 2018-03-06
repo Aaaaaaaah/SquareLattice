@@ -1,8 +1,8 @@
 import numpy as np
 from .node import Node
-from .SimpleNode import SimpleNode
+from .simple_update import SimpleNode
 
-class lattice(object):
+class Lattice(object):
 
     def __init__(self, rows, cols, data=None, bound_cond=True):
         pass

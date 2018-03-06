@@ -82,3 +82,7 @@ class SimpleNode(Node):
         ans[0].envs[-1] = ans[1]
         ans[2].envs[0] = ans[1]
         return ans[0], ans[2]
+
+    @classmethod
+    def update(cls):
+        pass
