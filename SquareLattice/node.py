@@ -147,6 +147,7 @@ class Node(object):
                 tensor_transposed.data,
                 [np.prod(dims1), np.prod(dims2)])
         )
+        env = np.sqrt(env)
 
         if not cut:
             cut = len(env)
