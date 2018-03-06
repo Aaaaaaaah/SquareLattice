@@ -111,5 +111,11 @@ class SimpleNode(Node):
         ans_tensor2 = cls.transpose(new_tensor2, tensor2.tags)
         tensor1.data = ans_tensor1.data
         tensor1.envs = ans_tensor1.envs
+        tensor1.dims = ans_tensor1.dims
         tensor2.data = ans_tensor2.data
         tensor2.envs = ans_tensor2.envs
+        tensor2.dims = ans_tensor2.dims
+
+    @classmethod
+    def qr_update(cls, tensor1, tensor2, tag1, tag2, phy1, phy2, hamiltonian, cut=None):
+        pass

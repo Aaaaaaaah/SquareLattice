@@ -1,5 +1,5 @@
 import numpy as np
-from node import Node
+from SquareLattice import *
 
 L1 = 5
 L2 = 6
@@ -22,7 +22,7 @@ D = 4
 def _node(s):
     l = [D]*len(s)
     l.append(2)
-    return Node(list(s)+["p"],l)
+    return SimpleNode(list(s)+["p"],l)
 
 def node_in_lattice(i,j):
     if (i-j)%2 == 0:
@@ -51,12 +51,14 @@ for t in range(10):
     print(t)
     for i in range(0,L1):
         for j in range(i%2,L2-1,2):
-            Node.update(lattice[i][j],lattice[i][j+1],"r","l","p","p",expH(1))
+            SimpleNode.update(lattice[i][j],lattice[i][j+1],"r","l","p","p",expH(1),cut=D)
     for j in range(0,L2):
         for i in range(j%2,L1-1,2):
-            Node.update(lattice[i][j],lattice[i+1][j],"d","u","p","p",expH(2))
+            SimpleNode.update(lattice[i][j],lattice[i+1][j],"d","u","p","p",expH(2),cut=D)
     for j in range(0,L2):
         for i in range((j+1)%2,L1-1,2):
-            Node.update(lattice[i][j],lattice[i+1][j],"d","u","p","p",expH(3))
+            SimpleNode.update(lattice[i][j],lattice[i+1][j],"d","u","p","p",expH(3),cut=D)
+    for i in range(0,L1):
+        for j in range(0,L2):
+            lattice[i][j].normize()
 
-print(lattice[1][1].envs)

@@ -96,9 +96,11 @@ class Node(object):
             assert isinstance(tags_dict2, dict)
 
         # order:the indexs of legs waiting for contracting
+        tags1 = [i if isinstance(i, str) else tensor1.tags[i] for i in tags1]
+        tags2 = [i if isinstance(i, str) else tensor2.tags[i] for i in tags2]
         try:
-            order1 = [tensor1.tags.index(i) if isinstance(i, str) else int(i) for i in tags1]
-            order2 = [tensor2.tags.index(i) if isinstance(i, str) else int(i) for i in tags2]
+            order1 = [tensor1.tags.index(i) for i in tags1]
+            order2 = [tensor2.tags.index(i) for i in tags2]
         except Exception as e:
             raise Exception("tag to contract not match") from e
 
