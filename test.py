@@ -105,35 +105,13 @@ class TestSimpleNode(unittest.TestCase):
 
     def test_update(self):
         print("\nTest Update\n")
+        A = SimpleNode(["l","p"],[2,2])
+        B = SimpleNode(["l","p"],[2,2])
+        print(A.data)
+        H = np.reshape([1,0,0,0,0,-1,0,0,0,0,-1,0,0,0,0,1],[2,2,2,2])
+        SimpleNode.update(A,B,"l","l","p","p",H)
+        print(A.data)
+        print(A.envs)
 
 if __name__ == '__main__':
     unittest.main()
-
-"""
-H = np.reshape([1,0,0,0,0,-1,0,0,0,0,-1,0,0,0,0,1],[2,2,2,2])
-Node.update(A,B,"l","l","p","p",H)
-print A.data
-print B.data
-Node.update(A,B,"l","l","p","p",H)
-print A.data
-print B.data
-Node.update(A,B,"l","l","p","p",H)
-print A.data
-print B.data
-"""
-
-"""
-Correct output
-[[-0.1  1. ]
-[ 1.   0.1 ]]
-[[-0.35405405  1.        ]
-[ 1.          0.35405405 ]]
-[[-0.1 -1. ]
-[-1.   0.1]]
-[[-0.35405405 -1.        ]
-[ 1.         -0.35405405 ]]
-[[-0.1  1. ]
-[ 1.   0.1 ]]
-[[-0.35405405  1.        ]
-[-1.         -0.35405405]]
-"""

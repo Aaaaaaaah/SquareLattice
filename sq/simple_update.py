@@ -83,5 +83,33 @@ class SimpleNode(Node):
         return ans[0], ans[2], ans[3], ans[4]
 
     @classmethod
-    def update(cls):
-        pass
+    def update(cls, tensor1, tensor2, tag1, tag2, phy1, phy2, hamiltonian, cut=None):
+        len1 = tensor1.dims[tensor1.tags.index(phy1) if isinstance(phy1, str) else int(phy1)]
+        len2 = tensor2.dims[tensor2.tags.index(phy2) if isinstance(phy2, str) else int(phy2)]
+        tmp_tensor = cls.contract(
+            tensor1, [tag1], tensor2, [tag2],
+            {i:"__1.%s"%i for i in tensor1.tags if i is not tag1},
+            {i:"__2.%s"%i for i in tensor2.tags if i is not tag2}
+        )
+        tmp_tags = tmp_tensor.tags
+        hamiltonian_tensor = cls(
+            ["__1", "__2", "__1.%s"%phy1, "__2.%s"%phy2],
+            [len1, len2, len1, len2],
+            hamiltonian
+        )
+        total_tensor = cls.contract(
+            tmp_tensor,
+            ["__1.%s"%phy1, "__2.%s"%phy2],
+            hamiltonian_tensor,
+            ["__1", "__2"]
+        )
+        ans_tensor = cls.transpose(total_tensor, tmp_tags)
+        new_tensor1, new_tensor2, _, _ = cls.svd(ans_tensor, len(tensor1.tags)-1, tag1, tag2, cut)
+        new_tensor1.rename_leg({"__1.%s"%i:i for i in tensor1.tags if i is not tag1})
+        new_tensor2.rename_leg({"__2.%s"%i:i for i in tensor2.tags if i is not tag2})
+        ans_tensor1 = cls.transpose(new_tensor1, tensor1.tags)
+        ans_tensor2 = cls.transpose(new_tensor2, tensor2.tags)
+        tensor1.data = ans_tensor1.data
+        tensor1.envs = ans_tensor1.envs
+        tensor2.data = ans_tensor2.data
+        tensor2.envs = ans_tensor2.envs

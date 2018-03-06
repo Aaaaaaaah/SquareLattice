@@ -29,7 +29,7 @@ class Node(object):
         self.tags = self.check_tags(tags,len(self.dims))
 
         if init_data:
-            if data:
+            if data is not None:
                 try:
                     self.data = np.reshape(np.array(data, np.float32), self.dims)
                 except Exception as e:
@@ -91,8 +91,8 @@ class Node(object):
 
         # order:the indexs of legs waiting for contracting
         try:
-            order1 = [tensor1.tags.index(i) for i in tags1]
-            order2 = [tensor2.tags.index(i) for i in tags2]
+            order1 = [tensor1.tags.index(i) if isinstance(i, str) else int(i) for i in tags1]
+            order2 = [tensor2.tags.index(i) if isinstance(i, str) else int(i) for i in tags2]
         except Exception as e:
             raise Exception("tag to contract not match") from e
 
