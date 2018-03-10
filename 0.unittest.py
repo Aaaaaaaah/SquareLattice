@@ -52,6 +52,11 @@ class TestNode(unittest.TestCase):
         A.reshape(["l","r"],[2,4])
         print(A)
 
+    def test_normalize(self):
+        print("\nTest Normalize\n")
+        A = Node(["l","a","b"],[2,2,2])
+        A.normize()
+
 class TestSimpleNode(unittest.TestCase):
     def test_init(self):
         print("\nTest Init\n")
@@ -62,6 +67,13 @@ class TestSimpleNode(unittest.TestCase):
         print(B.envs)
         C = SimpleNode(["a","b"],[2,2],[[1,10],[2,30]],init_envs=False)
         print(C.envs)
+
+    def test_normalize(self):
+        print("\nTest Normalize\n")
+        A = SimpleNode(["l","a","b"],[2,2,2])
+        A.normize()
+        A = SimpleNode(["l","a","b"],[2,2,2],init_envs=False)
+        A.normize()
 
     def test_contract(self):
         print("\nTest Contract\n")
@@ -112,6 +124,17 @@ class TestSimpleNode(unittest.TestCase):
         SimpleNode.update(A,B,"l","l","p","p",H)
         print(A.data)
         print(A.envs)
+
+    def test_qr_update(self):
+        print("\nTest QR Update\n")
+        for func in [SimpleNode.qr_update, SimpleNode.update]:
+            print("\n",func,"\n")
+            A = SimpleNode(["l","p"],[2,2],[[1,2],[10,30]])
+            B = SimpleNode(["l","p"],[2,2],[[5,30],[40,2]])
+            H = np.reshape([1,0,0,0,0,-1,0,0,0,0,-1,0,0,0,0,1],[2,2,2,2])
+            func(A,B,"l","l","p","p",H)
+            print(A.data)
+            print(A.envs)
 
 if __name__ == '__main__':
     unittest.main()

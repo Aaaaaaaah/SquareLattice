@@ -3,10 +3,11 @@ import numpy as np
 class Node(object):
     def normize(self):
         self.data /= np.max(np.abs(self.data))
-        for i in self.envs:
-            if i is None:
-                continue
-            i /= np.max(np.abs(i))
+        if hasattr(self,"envs"):
+            for i in self.envs:
+                if i is None:
+                    continue
+                i /= np.max(np.abs(i))
 
     @staticmethod
     def check_dims(dims):
@@ -147,7 +148,7 @@ class Node(object):
         data1, env, data2 = np.linalg.svd(
             np.reshape(
                 tensor_transposed.data,
-                [np.prod(dims1), np.prod(dims2)])
+                [np.prod(dims1, dtype=int), np.prod(dims2, dtype=int)])
         )
         env = np.sqrt(env)
 
@@ -203,7 +204,7 @@ class Node(object):
         data1, data2 = np.linalg.qr(
             np.reshape(
                 tensor_transposed.data,
-                [np.prod(dims1), np.prod(dims2)])
+                [np.prod(dims1, dtype=int), np.prod(dims2, dtype=int)])
         )
 
         if not cut:

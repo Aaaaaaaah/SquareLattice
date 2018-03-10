@@ -130,8 +130,8 @@ class SimpleNode(Node):
         )
         tmp_tensor1 = cls.copy_shape(tensor1)
         tmp_tensor2 = cls.copy_shape(tensor2)
-        tmp_tensor1.data = cls.absorb_envs(tensor1, 2, [tag1], False)
-        tmp_tensor2.data = cls.absorb_envs(tensor2, 2, [tag2], False)
+        tmp_tensor1.data = cls.absorb_envs(tensor1, 2, [tag1, phy1], False)
+        tmp_tensor2.data = cls.absorb_envs(tensor2, 2, [tag2, phy2], False)
 
         q1, r1 = cls.qr(tmp_tensor1, list(set(tmp_tensor1.tags)-set([tag1, phy1])), tag1, "__1.%s"%tag1)
         q2, r2 = cls.qr(tmp_tensor2, list(set(tmp_tensor2.tags)-set([tag2, phy2])), tag2, "__2.%s"%tag2)
