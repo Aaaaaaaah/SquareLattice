@@ -37,10 +37,6 @@ for i in range(L1):
 for i in range(L1-1):
     for j in range(L2):
         LL.add_link(str(L2*i+j),"d",str(L2*i+j+L2),"u")
-
-for i in LL.link_pool:
-    assert i["t1"] in LL.node_pool[i["T1"]].tags
-    assert i["t2"] in LL.node_pool[i["T2"]].tags
 ## add link
 
 H = np.reshape([[0.25,0,0,0],[0,-0.25,0.5,0],[0,0.5,-0.25,0],[0,0,0,0.25]],[2,2,2,2])
@@ -51,21 +47,6 @@ expH = I - 4.*ep*H
 
 for t in range(30):
     print(t)
-    if t == 100:
-        ep = 0.05
-        expH = I - 4.*ep*H
-    elif t == 200:
-        ep = 0.01
-        expH = I - 4.*ep*H
-    elif t == 400:
-        ep = 0.001
-        expH = I - 4.*ep*H
-    elif t == 800:
-        ep = 0.0005
-        expH = I - 4.*ep*H
-    elif t == 1300:
-        ep = 0.0001
-        expH = I - 4.*ep*H
     LL.update(expH,cut=D)
 
 
