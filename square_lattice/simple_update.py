@@ -150,9 +150,11 @@ class SimpleNode(Node):
 
         ans_tensor1 = cls.transpose(new_tensor1, tensor1.tags)
         ans_tensor2 = cls.transpose(new_tensor2, tensor2.tags)
-        tensor1.data = cls.absorb_envs(ans_tensor1, -2, [tag1], False)
+        tensor1.data = ans_tensor1.data
+        tensor1.data = cls.absorb_envs(tensor1, -2, [tag1], False)
         tensor1.envs[tensor1.tags.index(tag1)] = ans_tensor1.envs[ans_tensor1.tags.index(tag1)]
         tensor1.dims = ans_tensor1.dims
-        tensor2.data = cls.absorb_envs(ans_tensor2, -2, [tag2], False)
+        tensor2.data = ans_tensor2.data
+        tensor2.data = cls.absorb_envs(tensor2, -2, [tag2], False)
         tensor2.envs[tensor2.tags.index(tag2)] = ans_tensor2.envs[ans_tensor2.tags.index(tag2)]
         tensor2.dims = ans_tensor2.dims
