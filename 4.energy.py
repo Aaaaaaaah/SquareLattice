@@ -47,7 +47,7 @@ expH = I - 4.*ep*H
 
 for t in range(30):
     print(t)
-    LL.update(expH,cut=D)
+    LL.update(expH,cut=D,qr=True)
 
 
 total = SimpleNode.copy_shape(lattice[0][0])

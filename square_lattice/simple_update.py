@@ -38,12 +38,14 @@ class SimpleNode(Node):
         tensor1.envs[tag1] = tensor2.envs[tag2]
 
     @staticmethod
-    def absorb_envs(tensor, power, tags=None):
+    def absorb_envs(tensor, power, tags=None, exclude=False):
         ans = tensor.data.copy()
         if not tags:
             tags = range(len(tensor.dims))
         else:
             tags = [tensor.tags.index(i) if isinstance(i, str) else i for i in tags]
+        if(exclude):
+            tags = list(set(self.tags) - set(tags))
         for i in tags:
             tmp = np.ones(len(tensor.dims), dtype=int)
             tmp[i] = tensor.dims[i]
@@ -119,4 +121,38 @@ class SimpleNode(Node):
 
     @classmethod
     def qr_update(cls, tensor1, tensor2, tag1, tag2, phy1, phy2, hamiltonian, cut=None):
-        pass
+        len1 = tensor1.dims[tensor1.tags.index(phy1) if isinstance(phy1, str) else int(phy1)]
+        len2 = tensor2.dims[tensor2.tags.index(phy2) if isinstance(phy2, str) else int(phy2)]
+        hamiltonian_tensor = cls(
+            ["__1", "__2", "__1.%s"%phy1, "__2.%s"%phy2],
+            [len1, len2, len1, len2],
+            hamiltonian
+        )
+        tmp_tensor1 = cls.copy_shape(tensor1)
+        tmp_tensor2 = cls.copy_shape(tensor2)
+        tmp_tensor1.data = cls.absorb_envs(tensor1, 2, [tag1], False)
+        tmp_tensor2.data = cls.absorb_envs(tensor2, 2, [tag2], False)
+
+        q1, r1 = cls.qr(tmp_tensor1, list(set(tmp_tensor1.tags)-set([tag1, phy1])), tag1, "__1.%s"%tag1)
+        q2, r2 = cls.qr(tmp_tensor2, list(set(tmp_tensor2.tags)-set([tag2, phy2])), tag2, "__2.%s"%tag2)
+
+        prod_tensor = cls.contract(r1, [tag1], r2, [tag2], {phy1: "__1.%s"%phy1}, {phy2: "__2.%s"%phy2})
+
+        total_tensor = cls.contract(
+            prod_tensor,
+            ["__1.%s"%phy1, "__2.%s"%phy2],
+            hamiltonian_tensor,
+            ["__1", "__2"]
+        )
+        svd_tensor1, svd_tensor2, _, _ = cls.svd(total_tensor, ["__1.%s"%tag1, "__1.%s"%phy1], tag1, tag2, cut=cut)
+        new_tensor1 = cls.contract(svd_tensor1, ["__1.%s"%tag1], q1, [tag1], {"__1.%s"%phy1:phy1}, {})
+        new_tensor2 = cls.contract(svd_tensor2, ["__2.%s"%tag2], q2, [tag2], {"__2.%s"%phy2:phy2}, {})
+
+        ans_tensor1 = cls.transpose(new_tensor1, tensor1.tags)
+        ans_tensor2 = cls.transpose(new_tensor2, tensor2.tags)
+        tensor1.data = cls.absorb_envs(ans_tensor1, -2, [tag1], False)
+        tensor1.envs[tensor1.tags.index(tag1)] = ans_tensor1.envs[ans_tensor1.tags.index(tag1)]
+        tensor1.dims = ans_tensor1.dims
+        tensor2.data = cls.absorb_envs(ans_tensor2, -2, [tag2], False)
+        tensor2.envs[tensor2.tags.index(tag2)] = ans_tensor2.envs[ans_tensor2.tags.index(tag2)]
+        tensor2.dims = ans_tensor2.dims
