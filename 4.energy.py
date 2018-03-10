@@ -45,8 +45,11 @@ I = np.reshape(np.identity(4),[2,2,2,2])
 ep = 0.1
 expH = I - 4.*ep*H
 
-for t in range(30):
+for t in range(1000):
     print(t)
+    if t in [100,200,300,400,500,600,700,800,900]:
+        ep /= 2
+        expH = I - 4.*ep*H
     LL.update(expH,cut=D,qr=True)
 
 
