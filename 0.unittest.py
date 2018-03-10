@@ -129,9 +129,11 @@ class TestSimpleNode(unittest.TestCase):
         print("\nTest QR Update\n")
         for func in [SimpleNode.qr_update, SimpleNode.update]:
             print("\n",func,"\n")
-            A = SimpleNode(["l","p"],[2,2],[[1,2],[10,30]])
-            B = SimpleNode(["l","p"],[2,2],[[5,30],[40,2]])
-            H = np.reshape([1,0,0,0,0,-1,0,0,0,0,-1,0,0,0,0,1],[2,2,2,2])
+            A = SimpleNode(["l","p"],[2,2],[[1,2],[10,30]],
+                           envs=[[2,0.5],[1,1]])
+            B = SimpleNode(["l","p"],[2,2],[[5,30],[40,2]],
+                           envs=[[2,0.5],[1,1]])
+            H = np.reshape([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],[2,2,2,2])
             func(A,B,"l","l","p","p",H)
             print(A.data)
             print(A.envs)

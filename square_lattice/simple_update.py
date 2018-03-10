@@ -42,10 +42,13 @@ class SimpleNode(Node):
         ans = tensor.data.copy()
         if not tags:
             tags = range(len(tensor.dims))
+            if exclude:
+                raise Exception("exclude must be false when tags is none")
         else:
-            tags = [tensor.tags.index(i) if isinstance(i, str) else i for i in tags]
-        if(exclude):
-            tags = list(set(self.tags) - set(tags))
+            tags = [tensor.tags[i] if isinstance(i, int) else i for i in tags]
+            if(exclude):
+                tags = list(set(tensor.tags) - set(tags))
+            tags = [tensor.tags.index(i) for i in tags]
         for i in tags:
             tmp = np.ones(len(tensor.dims), dtype=int)
             tmp[i] = tensor.dims[i]
@@ -121,6 +124,7 @@ class SimpleNode(Node):
 
     @classmethod
     def qr_update(cls, tensor1, tensor2, tag1, tag2, phy1, phy2, hamiltonian, cut=None):
+
         len1 = tensor1.dims[tensor1.tags.index(phy1) if isinstance(phy1, str) else int(phy1)]
         len2 = tensor2.dims[tensor2.tags.index(phy2) if isinstance(phy2, str) else int(phy2)]
         hamiltonian_tensor = cls(
@@ -136,6 +140,8 @@ class SimpleNode(Node):
         q1, r1 = cls.qr(tmp_tensor1, list(set(tmp_tensor1.tags)-set([tag1, phy1])), tag1, "__1.%s"%tag1)
         q2, r2 = cls.qr(tmp_tensor2, list(set(tmp_tensor2.tags)-set([tag2, phy2])), tag2, "__2.%s"%tag2)
 
+        r1.envs[r1.tags.index(tag1)] = tensor1.envs[tensor1.tags.index(tag1)]
+        r2.envs[r2.tags.index(tag2)] = tensor2.envs[tensor2.tags.index(tag2)]
         prod_tensor = cls.contract(r1, [tag1], r2, [tag2], {phy1: "__1.%s"%phy1}, {phy2: "__2.%s"%phy2})
 
         total_tensor = cls.contract(
