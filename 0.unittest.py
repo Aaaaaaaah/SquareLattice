@@ -112,6 +112,10 @@ class TestSimpleNode(unittest.TestCase):
         print("\nTest absorb\n")
         A = SimpleNode(["l","p"],[2,2],[[1,10],[2,30]],envs=[[0.5,0.1],[0.1,0.5]])
         B = SimpleNode.absorb(A)
+        try:
+            C = SimpleNode.absorb_envs(A,1,None,True)
+        except:
+            pass
         print(B.data)
         print(type(B))
 
